@@ -1,7 +1,7 @@
 export default {
   async fetch(request) {
     // 把你的 index.html 內容複製貼上到下面的引號中
-    const html = `
+    const html = 
       <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -2070,7 +2070,7 @@ nxos: [
 
 </body>
 </html>
-    `;
+    
 
     return new Response(html, {
       headers: {
@@ -2078,4 +2078,5 @@ nxos: [
       },
     });
   },
+
 };
