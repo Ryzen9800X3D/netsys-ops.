@@ -1,5 +1,2081 @@
 export default {
   async fetch(request) {
-    return new Response("Hello World! Worker is running.");
+    // 把你的 index.html 內容複製貼上到下面的引號中
+    const html = `
+      <!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetSys Ops - 全方位維運知識庫</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        .custom-code { tab-size: 4; }
+    </style>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cisco: '#049fd9',
+                        nxos: '#00bceb', /* Nexus Blue */
+                        palo: '#fa582d',
+                        forti: '#c32025',
+                        hp: '#c32085',
+                        linux: '#fcc624', /* Linux Yellow */
+                        win: '#00a4ef',   /* Windows Blue */
+                        dark: '#0f172a',
+						kb: '#8b5cf6',
+						
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+
+<div id="app" class="flex h-screen overflow-hidden text-slate-800">
+
+    <!-- 左側導航欄 -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col flex-shrink-0 shadow-xl z-20">
+        <div class="p-6 flex items-center gap-3 border-b border-slate-800">
+            <i class="ri-server-line text-3xl text-indigo-400"></i>
+            <div>
+                <h1 class="font-bold text-lg tracking-wide">NetSys Ops</h1>
+                <p class="text-xs text-slate-400">網路 & 系統維運中心</p>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto p-3 space-y-1">
+            
+            <!-- 網路設備組 -->
+            <div class="px-3 pt-4 pb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">網路設備</div>
+            
+            <button @click="setVendor('cisco')" :class="getNavClass('cisco', 'bg-cisco')" class="nav-btn">
+                <i class="ri-router-line text-lg"></i> <span class="font-medium">Cisco IOS (傳統)</span>
+            </button>
+            
+            <button @click="setVendor('nxos')" :class="getNavClass('nxos', 'bg-nxos')" class="nav-btn">
+                <i class="ri-database-2-line text-lg"></i> <span class="font-medium">Cisco Nexus (N3K)</span>
+            </button>
+
+            <button @click="setVendor('palo')" :class="getNavClass('palo', 'bg-palo')" class="nav-btn">
+                <i class="ri-fire-line text-lg"></i> <span class="font-medium">Palo Alto</span>
+            </button>
+
+            <button @click="setVendor('forti')" :class="getNavClass('forti', 'bg-forti')" class="nav-btn">
+                <i class="ri-shield-check-line text-lg"></i> <span class="font-medium">Fortinet</span>
+            </button>
+            <button @click="setVendor('hp')" :class="getNavClass('hp', 'bg-hp')" class="nav-btn">
+                <i class="ri-router-line text-lg"></i> <span class="font-medium">HP</span>
+            </button>
+
+            <!-- 系統維運組 -->
+            <div class="px-3 pt-6 pb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">作業系統</div>
+
+            <button @click="setVendor('linux')" :class="getNavClass('linux', 'bg-yellow-600')" class="nav-btn">
+                <i class="ri-ubuntu-line text-lg"></i> <span class="font-medium">Linux Server</span>
+            </button>
+
+            <button @click="setVendor('windows')" :class="getNavClass('windows', 'bg-win')" class="nav-btn">
+                <i class="ri-windows-fill text-lg"></i> <span class="font-medium">Windows / PS</span>
+            </button>
+			<div class="px-3 pt-6 pb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">通用知識庫</div>
+
+<button @click="setVendor('kb')" :class="getNavClass('kb', 'bg-kb')" class="nav-btn">
+    <i class="ri-book-read-line text-lg"></i> <span class="font-medium">網路基礎知識 (Wiki)</span>
+</button>
+
+        </nav>
+
+        <div class="p-4 border-t border-slate-800 text-center text-xs text-slate-500">
+            Updated for 2025 Operations
+        </div>
+    </aside>
+
+    <!-- 主要內容 -->
+    <main class="flex-1 flex flex-col bg-gray-50 min-w-0">
+        
+        <!-- Header -->
+        <header class="bg-white border-b px-8 py-4 flex justify-between items-center shadow-sm z-10">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-3">
+                    <span :class="vendorColorClass" class="w-3 h-8 rounded-full block shadow-md"></span>
+                    {{ currentVendorName }}
+                </h2>
+                <p class="text-sm text-gray-500 mt-1 ml-6">
+                    已收錄 {{ filteredDocs.length }} 條技術指令
+                </p>
+            </div>
+            
+            <div class="relative w-96">
+                <i class="ri-search-line absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                <input type="text" v-model="searchQuery" placeholder="搜尋指令 (例如: vpc, tar, netstat)..." 
+                    class="w-full pl-10 pr-4 py-2 bg-gray-100 border-transparent rounded-lg focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all text-sm">
+            </div>
+        </header>
+
+        <!-- Categories -->
+        <div class="px-8 pt-6 pb-2 flex gap-2 overflow-x-auto no-scrollbar">
+            <button @click="currentCategory = 'all'" 
+                :class="currentCategory === 'all' ? 'bg-slate-800 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'"
+                class="px-4 py-1.5 rounded-full text-sm font-medium border transition-colors shadow-sm whitespace-nowrap">
+                全部
+            </button>
+            <button v-for="cat in categories" :key="cat" @click="currentCategory = cat"
+                :class="currentCategory === cat ? 'bg-indigo-100 text-indigo-700 border-indigo-200' : 'bg-white text-gray-600 hover:bg-gray-100'"
+                class="px-4 py-1.5 rounded-full text-sm font-medium border transition-colors shadow-sm whitespace-nowrap">
+                {{ cat }}
+            </button>
+        </div>
+
+        <!-- Content Grid -->
+        <div class="flex-1 overflow-y-auto p-8 scroll-smooth">
+            <transition-group name="fade" tag="div" class="grid grid-cols-1 xl:grid-cols-2 gap-6 pb-20">
+                
+                <div v-for="(doc, index) in filteredDocs" :key="index" 
+                    class="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all border border-gray-200 flex flex-col group">
+                    
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <span class="inline-block px-2 py-1 text-xs font-semibold rounded bg-gray-100 text-gray-600 mb-2 border border-gray-200">
+                                {{ doc.category }}
+                            </span>
+                            <h3 class="text-lg font-bold text-gray-800 tracking-tight">{{ doc.title }}</h3>
+                        </div>
+                        <div class="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-full text-xl text-gray-400">
+                            <i :class="getIcon(doc.category)"></i>
+                        </div>
+                    </div>
+
+                    <p class="text-gray-600 text-sm mb-4 leading-relaxed border-l-2 border-gray-200 pl-3">
+                        {{ doc.desc }}
+                    </p>
+
+                    <div class="mt-auto relative">
+                        <button @click="copyCode(doc.code)" class="absolute right-2 top-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white text-xs px-2 py-1 rounded border border-white/20 transition opacity-0 group-hover:opacity-100">
+                            <i class="ri-file-copy-line mr-1"></i>複製
+                        </button>
+                        <pre class="bg-[#1e293b] text-gray-200 p-4 rounded-lg text-sm font-mono overflow-x-auto leading-normal shadow-inner"><code>{{ doc.code }}</code></pre>
+                    </div>
+                </div>
+
+            </transition-group>
+
+            <div v-if="filteredDocs.length === 0" class="flex flex-col items-center justify-center py-20 text-gray-400">
+                <i class="ri-ghost-line text-6xl mb-4"></i>
+                <span class="text-lg">這裡空空如也...</span>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    const { createApp } = Vue
+
+    createApp({
+        data() {
+            return {
+                currentVendor: 'nxos', // 預設顯示 N3K
+                currentCategory: 'all',
+                searchQuery: '',
+                database: {
+                    // ================= CISCO IOS (Traditional) =================
+                    cisco: [
+                        { title: 'VLAN 與 Access Port', category: 'Switching', desc: '建立 VLAN 並指派介面。', code: 'conf t\nvlan 10\n name USER_PC\nexit\ninterface Gi1/0/1\n switchport mode access\n switchport access vlan 10\n spanning-tree portfast\nend' },
+                        { title: 'Trunk (802.1Q) 設定', category: 'Switching', desc: '設定 Uplink Port 為 Trunk 模式。', code: 'interface Gi1/0/24\n switchport trunk encapsulation dot1q\n switchport mode trunk\n switchport trunk allowed vlan 10,20,99\nend' },
+                        { title: 'OSPF 路由設定', category: 'Routing', desc: '啟用 OSPF 並宣告網段。', code: 'router ospf 1\n router-id 1.1.1.1\n network 192.168.10.0 0.0.0.255 area 0\n passive-interface default\n no passive-interface Gi0/1' },
+                        { title: 'DHCP Server', category: 'Services', desc: '配置內建 DHCP 服務。', code: 'ip dhcp pool LAN_10\n network 192.168.10.0 255.255.255.0\n default-router 192.168.10.254\n dns-server 8.8.8.8\n lease 7' },
+                        { title: 'Show 指令大全', category: 'Troubleshooting', desc: '最常用的查修指令。', code: 'show ip int brief\nshow cdp neighbors detail\nshow ip route\nshow interfaces status\nshow log' },  { title: '儲存設定 (Save Config)', category: 'Basic', desc: '將 Running Config 寫入 Startup Config (永久保存)。', code: 'write memory\n# 或者\ncopy running-config startup-config' },
+    { title: '排程重開機 (Reload Schedule)', category: 'Management', desc: '設定設備在特定時間後重開機 (遠端維護怕斷線必備)。', code: '# 10分鐘後重開\nreload in 10\n# 取消重開\nreload cancel' },
+    { title: '設定時區與時間 (Clock)', category: 'Basic', desc: '設定台北時區 (GMT+8)。', code: 'clock timezone TW 8\n# 手動設定時間\nclock set 12:00:00 22 Nov 2025' },
+    { title: '防止 DNS 查詢 (No IP Domain-Lookup)', category: 'Basic', desc: '防止打錯指令時設備卡住去查 DNS。', code: 'conf t\nno ip domain-lookup\nline console 0\n logging synchronous\nend' },
+    { title: '加密明文密碼', category: 'Security', desc: '將設定檔中的明文密碼加密顯示 (Type 7)。', code: 'service password-encryption' },
+    { title: '設定 Banner 警語', category: 'Basic', desc: '設定登入前的警告訊息。', code: 'banner motd #\nAuthorized Access Only!\n#' },
+    { title: '建立本地使用者 (User)', category: 'Management', desc: '建立最高權限 (Privilege 15) 的本地帳號。', code: 'username admin privilege 15 secret MyP@ssw0rd' },
+    { title: '備份還原機制 (Archive)', category: 'Management', desc: '設定自動備份，並啟用設定回滾功能 (Rollback)。', code: 'archive\n path flash:archive\n write-memory\n time-period 1440\nend' },
+
+    // ================= 2. 介面管理 (Interface) =================
+    { title: '批量介面設定 (Range)', category: 'Basic', desc: '一次設定多個 Port。', code: 'interface range Gi1/0/1 - 24\n description USER_PORTS\n no shutdown' },
+    { title: 'Loopback 介面', category: 'Routing', desc: '建立邏輯介面，常用於 OSPF Router-ID 或管理 IP。', code: 'interface loopback 0\n ip address 10.0.0.1 255.255.255.255' },
+    { title: '設定介面速度與雙工', category: 'Basic', desc: '強制指定 Speed 與 Duplex (當自動協商失敗時)。', code: 'interface Gi1/0/1\n speed 100\n duplex full' },
+    { title: 'Sub-Interface (Router on a Stick)', category: 'Routing', desc: '單臂路由：在一個實體 Port 上切分多個 VLAN Gateway。', code: 'interface Gi0/0.10\n encapsulation dot1q 10\n ip address 192.168.10.254 255.255.255.0\ninterface Gi0/0.20\n encapsulation dot1q 20\n ip address 192.168.20.254 255.255.255.0' },
+    { title: '清除介面計數器', category: 'Troubleshooting', desc: '歸零介面的 Error/Traffic 統計，方便觀察新的錯誤。', code: 'clear counters interface Gi1/0/1' },
+
+    // ================= 3. 交換機進階 L2 (Switching) =================
+    { title: 'VLAN 建立與命名', category: 'Switching', desc: '標準 VLAN 建立步驟。', code: 'vlan 10\n name SALES\nvlan 20\n name HR' },
+    { title: 'Trunk 設定與修剪 (Pruning)', category: 'Switching', desc: '設定 Trunk 並只允許特定 VLAN 通過 (安全性最佳實踐)。', code: 'interface Gi1/0/24\n switchport trunk encapsulation dot1q\n switchport mode trunk\n switchport trunk allowed vlan 10,20,99' },
+    { title: '設定 Native VLAN', category: 'Switching', desc: '更改預設 Native VLAN 以提升安全性 (預設是 VLAN 1)。', code: 'interface Gi1/0/24\n switchport trunk native vlan 999' },
+    { title: 'STP PortFast (快速轉發)', category: 'Switching', desc: '讓接電腦的 Port 跳過 STP 偵測，立即連線 (防止 DHCP Timeout)。', code: 'interface Gi1/0/1\n spanning-tree portfast' },
+    { title: 'STP BPDU Guard (防護)', category: 'Switching', desc: '若 Access Port 收到 Switch 的 BPDU 封包則自動關閉 Port (防私接 Hub)。', code: 'interface Gi1/0/1\n spanning-tree bpduguard enable' },
+    { title: '設定 Root Bridge (STP)', category: 'Switching', desc: '強制指定這台 Switch 為 STP 的根 (Root)，避免路徑亂跑。', code: 'spanning-tree vlan 1,10,20 root primary' },
+    { title: 'EtherChannel (LACP)', category: 'Switching', desc: '將多條線路綑綁為一條 (LACP 模式)。', code: 'interface range Gi1/0/1 - 2\n channel-group 1 mode active\ninterface port-channel 1\n switchport mode trunk' },
+    { title: 'Port Security (MAC 綁定)', category: 'Security', desc: '限制該 Port 只能學習 1 個 MAC，違規就 Shutdown。', code: 'interface Gi1/0/1\n switchport port-security\n switchport port-security maximum 1\n switchport port-security violation shutdown\n switchport port-security mac-address sticky' },
+    { title: 'DHCP Snooping (防偽冒 DHCP)', category: 'Security', desc: '防止內網私接 IP 分享器發放錯誤 IP。', code: 'ip dhcp snooping\nip dhcp snooping vlan 10\n# 上連 Port 設為信任\ninterface Gi1/0/24\n ip dhcp snooping trust' },
+    { title: 'VTP 設定 (Transparent)', category: 'Switching', desc: '建議設為透明模式，避免 VTP 意外覆蓋 VLAN 資料庫。', code: 'vtp mode transparent\nvtp domain MY_COMPANY' },
+    { title: 'Voice VLAN', category: 'Switching', desc: '設定 IP Phone 專用 VLAN。', code: 'interface Gi1/0/1\n switchport mode access\n switchport access vlan 10\n switchport voice vlan 100' },
+
+    // ================= 4. 路由協定 L3 (Routing) =================
+    { title: '靜態路由 (Static Route)', category: 'Routing', desc: '設定 Default Route 或特定網段路由。', code: 'ip route 0.0.0.0 0.0.0.0 192.168.1.254\nip route 10.0.0.0 255.0.0.0 192.168.2.1' },
+    { title: 'OSPF 基本設定', category: 'Routing', desc: '啟動 OSPF 並宣告網段。', code: 'router ospf 1\n router-id 1.1.1.1\n network 192.168.10.0 0.0.0.255 area 0' },
+    { title: 'OSPF 被動介面 (Passive)', category: 'Routing', desc: '禁止 LAN 端發送 OSPF Hello 封包 (安全與減少雜訊)。', code: 'router ospf 1\n passive-interface default\n no passive-interface Gi0/1' },
+    { title: 'OSPF 調整 Cost 值', category: 'Routing', desc: '手動控制 OSPF 路徑選擇 (值越小越優先)。', code: 'interface Gi0/1\n ip ospf cost 50' },
+    { title: 'EIGRP 設定', category: 'Routing', desc: 'Cisco 私有路由協定設定。', code: 'router eigrp 100\n no auto-summary\n network 192.168.10.0 0.0.0.255' },
+    { title: 'BGP 建立鄰居', category: 'Routing', desc: '基本的 BGP Peering 設定。', code: 'router bgp 65001\n neighbor 10.1.1.2 remote-as 65002\n network 192.168.100.0 mask 255.255.255.0' },
+    { title: 'HSRP (閘道備援)', category: 'Redundancy', desc: '設定虛擬閘道 IP (Virtual Gateway)。', code: 'interface vlan 10\n standby 1 ip 192.168.10.254\n standby 1 priority 110\n standby 1 preempt' },
+
+    // ================= 5. 安全與 ACL (Security) =================
+    { title: '標準 ACL (Standard)', category: 'Security', desc: '僅根據來源 IP 進行阻擋 (編號 1-99)。', code: 'access-list 10 deny 192.168.1.100\naccess-list 10 permit any\ninterface Gi0/0\n ip access-group 10 in' },
+    { title: '延伸 ACL (Extended)', category: 'Security', desc: '可根據 Protocol, Source, Destination, Port 進行阻擋。', code: 'ip access-list extended BLOCK_WEB\n deny tcp any host 10.1.1.1 eq 80\n permit ip any any\ninterface Gi0/0\n ip access-group BLOCK_WEB in' },
+    { title: 'ACL Log 紀錄', category: 'Security', desc: '紀錄被 ACL 擋下的封包 (加上 log 關鍵字)。', code: 'access-list 100 deny ip any host 10.1.1.1 log' },
+    { title: 'SSH 啟用設定', category: 'Security', desc: '產生 RSA Key 並啟用 SSH 第 2 版。', code: 'ip domain-name cisco.com\ncrypto key generate rsa modulus 2048\nip ssh version 2\nline vty 0 4\n transport input ssh' },
+    { title: '限制 SSH 登入來源', category: 'Security', desc: '只允許特定管理網段 SSH 到設備。', code: 'access-list 50 permit 192.168.99.0 0.0.0.255\nline vty 0 4\n access-class 50 in' },
+
+    // ================= 6. NAT 與 DHCP (Services) =================
+    { title: 'NAT Overload (PAT)', category: 'Services', desc: '讓內網多人共用一個 WAN IP 上網 (最常用)。', code: 'access-list 1 permit 192.168.10.0 0.0.0.255\nip nat inside source list 1 interface Gi0/0 overload\ninterface Gi0/0\n ip nat outside\ninterface Gi0/1\n ip nat inside' },
+    { title: 'Static NAT (Server Mapping)', category: 'Services', desc: '將外部 IP 1對1 對應到內部 Server。', code: 'ip nat inside source static 192.168.10.5 203.0.113.5' },
+    { title: 'DHCP Server', category: 'Services', desc: '設定路由器發放 IP。', code: 'ip dhcp excluded-address 192.168.10.1 192.168.10.10\nip dhcp pool LAN_POOL\n network 192.168.10.0 255.255.255.0\n default-router 192.168.10.254\n dns-server 8.8.8.8' },
+    { title: 'DHCP Relay (IP Helper)', category: 'Services', desc: '當 DHCP Server 在不同網段時使用。', code: 'interface vlan 10\n ip helper-address 192.168.100.5' },
+
+    // ================= 7. 監控與除錯 (Troubleshooting) =================
+    { title: 'Show 介面狀態', category: 'Troubleshooting', desc: '檢查介面 UP/DOWN、錯誤與設定。', code: 'show ip interface brief\nshow interface status\nshow interfaces description' },
+    { title: 'Show 路由表', category: 'Troubleshooting', desc: '查看目前路由路徑。', code: 'show ip route\nshow ip route ospf' },
+    { title: 'Show 鄰居設備 (CDP/LLDP)', category: 'Troubleshooting', desc: '查看連接的 Cisco 設備或他牌設備資訊。', code: 'show cdp neighbors detail\nshow lldp neighbors detail' },
+    { title: 'Show 光纖訊號 (DOM)', category: 'Troubleshooting', desc: '檢查光模組收發光強度 (TX/RX Power)。', code: 'show interfaces transceiver detail' },
+    { title: 'Show MAC Address Table', category: 'Troubleshooting', desc: '查詢 MAC 位址在哪個 Port。', code: 'show mac address-table\nshow mac address-table address aaaa.bbbb.cccc' },
+    { title: 'Show VLAN 資訊', category: 'Troubleshooting', desc: '檢查 VLAN 是否存在以及 Port 的歸屬。', code: 'show vlan brief\nshow interface trunk' },
+    { title: 'Show EtherChannel', category: 'Troubleshooting', desc: '檢查 LACP 綑綁狀態 (SU 代表成功)。', code: 'show etherchannel summary' },
+    { title: 'Show Log (日誌)', category: 'Troubleshooting', desc: '查看系統歷史訊息。', code: 'show logging\nclear logging' },
+    { title: 'Show CPU 與記憶體', category: 'Troubleshooting', desc: '檢查效能負載。', code: 'show processes cpu sorted\nshow processes memory sorted' },
+    { title: 'Ping 與 Traceroute', category: 'Troubleshooting', desc: '基本連線測試工具。', code: 'ping 8.8.8.8\ntraceroute 8.8.8.8' },
+    { title: 'Debug IP Packet (慎用)', category: 'Troubleshooting', desc: '即時顯示封包流向 (需用 ACL 過濾否則會當機)。', code: 'access-list 199 permit icmp any any\ndebug ip packet 199 detail\nundebug all' },
+
+                    ],
+
+                    // ================= CISCO NX-OS (N3K/N9K) =================
+                    // === 請將此內容完全覆蓋 database.nxos 陣列 ===
+nxos: [
+    // ================= 1. 系統初始化與 Feature 管理 (System & Features) =================
+    { title: '啟用 L2 基礎功能', category: 'Basic', desc: 'NX-OS 預設功能全關，需手動開啟 (LACP, VLAN, STP)。', code: 'conf t\nfeature lacp\nfeature interface-vlan\nfeature vtp\nfeature udld\nfeature lldp' },
+    { title: '啟用 L3 路由功能', category: 'Basic', desc: '開啟 OSPF, BGP, PBR 等路由功能。', code: 'feature ospf\nfeature bgp\nfeature pbr\nfeature bfd' },
+    { title: '啟用資料中心功能 (vPC/VXLAN)', category: 'Basic', desc: '開啟 vPC 與 VXLAN 相關功能。', code: 'feature vpc\nfeature nv overlay\nfeature vn-segment-vlan-based\nnv overlay evpn' },
+    { title: '設定 Hostname', category: 'Basic', desc: '設定設備名稱。', code: 'hostname N3K-LEAF-01' },
+    { title: '建立管理員帳號', category: 'Basic', desc: '建立最高權限使用者。', code: 'username admin role network-admin password <Password>' },
+    { title: '啟用 SSH 服務', category: 'Security', desc: '產生 RSA Key 並啟用 SSH。', code: 'feature ssh\ncrypto key generate rsa modulus 2048\nline vty\n transport input ssh' },
+    { title: '設定管理介面 (mgmt0)', category: 'Basic', desc: '設定 Out-of-band 管理 IP。', code: 'interface mgmt0\n vrf member management\n ip address 192.168.1.10/24' },
+    { title: '設定預設路由 (Management VRF)', category: 'Basic', desc: '讓管理介面可以連上網際網路。', code: 'vrf context management\n ip route 0.0.0.0/0 192.168.1.254' },
+    { title: '設定時區與 NTP', category: 'Management', desc: '設定 NTP Server (建議使用管理 VRF)。', code: 'clock timezone TW 8\nntp server 192.168.1.100 use-vrf management' },
+    { title: '儲存設定 (Copy Run Start)', category: 'Basic', desc: 'NX-OS 的存檔指令。', code: 'copy running-config startup-config' },
+    { title: '設定 Boot Image', category: 'Management', desc: '指定開機映像檔 (升級用)。', code: 'boot nxos bootflash:nxos.9.3.5.bin\ncopy run start' },
+
+    // ================= 2. vPC 虛擬 Port Channel (vPC High Availability) =================
+    { title: 'vPC Domain 建立', category: 'vPC', desc: '建立 vPC 網域 (兩台 Switch ID 需一致)。', code: 'vpc domain 10\n role priority 10\n system-priority 4096\n peer-keepalive destination 10.1.1.2 source 10.1.1.1 vrf management' },
+    { title: 'vPC Peer-Link 設定', category: 'vPC', desc: '設定兩台 Switch 之間的資料同步鏈路 (重要)。', code: 'interface port-channel 1\n description vPC-PEER-LINK\n switchport mode trunk\n switchport trunk allowed vlan 1-3967\n vpc peer-link\n spanning-tree port type network' },
+    { title: 'vPC Member Port (接入端)', category: 'vPC', desc: '連接 Server 或 Downlink Switch 的 LACP 設定。', code: 'interface Ethernet1/10\n channel-group 10 mode active\ninterface port-channel 10\n vpc 10\n switchport mode trunk' },
+    { title: 'vPC Auto-Recovery', category: 'vPC', desc: '當兩台都斷電後復電，讓孤島設備自動恢復運作。', code: 'vpc domain 10\n auto-recovery\n delay restore 30' },
+    { title: 'vPC Peer-Gateway', category: 'vPC', desc: '允許 vPC Peer 轉發對方的 MAC (優化 L3 轉發)。', code: 'vpc domain 10\n peer-gateway' },
+    { title: 'vPC ARP Sync', category: 'vPC', desc: '加速 ARP 表同步。', code: 'vpc domain 10\n ip arp synchronize' },
+    { title: 'Show vPC 狀態 (簡易)', category: 'vPC', desc: '檢查 vPC 是否成功建立。', code: 'show vpc brief' },
+    { title: 'Show vPC 一致性檢查', category: 'vPC', desc: '檢查兩台 Switch 設定是否衝突 (Type 1 錯誤會斷網)。', code: 'show vpc consistency-parameters global' },
+    { title: 'Show vPC Peer-Keepalive', category: 'vPC', desc: '檢查心跳線狀態。', code: 'show vpc peer-keepalive' },
+    { title: 'Show vPC Role', category: 'vPC', desc: '查看誰是 Primary 誰是 Secondary。', code: 'show vpc role' },
+
+    // ================= 3. L2 交換與介面管理 (Switching) =================
+    { title: '建立 VLAN', category: 'Switching', desc: '建立並命名 VLAN。', code: 'vlan 10\n name WEB_SVR\n state active' },
+    { title: 'Access Port 設定', category: 'Switching', desc: '連接終端設備。', code: 'interface Ethernet1/1\n switchport mode access\n switchport access vlan 10\n no shutdown' },
+    { title: 'Trunk Port 設定', category: 'Switching', desc: '設定 Trunk 並只允許特定 VLAN。', code: 'interface Ethernet1/2\n switchport mode trunk\n switchport trunk allowed vlan 10,20' },
+    { title: 'Port-Channel (LACP)', category: 'Switching', desc: '建立 LACP 聚合介面。', code: 'interface port-channel 100\n switchport mode trunk\ninterface Ethernet1/49\n channel-group 100 mode active' },
+    { title: 'Spanning-Tree 模式', category: 'Switching', desc: '設定為 RPVST+ 或 MST。', code: 'spanning-tree mode rapid-pvst\n# 或\nspanning-tree mode mst' },
+    { title: 'STP Port Type Edge', category: 'Switching', desc: '類似 PortFast，接 Server 必開，防止 TCN。', code: 'interface Ethernet1/1\n spanning-tree port type edge' },
+    { title: 'STP BPDU Guard', category: 'Switching', desc: '防止 Edge Port 收到 BPDU (防環路)。', code: 'interface Ethernet1/1\n spanning-tree bpduguard enable' },
+    { title: 'UDLD 設定', category: 'Switching', desc: '防止光纖單向通訊造成環路。', code: 'interface Ethernet1/48\n udld enable aggressive' },
+    { title: 'Jumbo Frame 設定', category: 'Switching', desc: '開啟 9216 MTU (需重開機生效)。', code: 'policy-map type network-qos JUMBO\n class type network-qos class-default\n  mtu 9216\nsystem qos\n service-policy type network-qos JUMBO' },
+    { title: '清除介面計數器', category: 'Switching', desc: '歸零統計數據。', code: 'clear counters interface Ethernet1/1' },
+
+    // ================= 4. L3 路由與 VRF (Routing) =================
+    { title: '建立 VRF (虛擬路由)', category: 'Routing', desc: '建立 Tenant VRF 以隔離路由表。', code: 'vrf context TENANT_A\n rd 65001:10\n address-family ipv4 unicast' },
+    { title: 'L3 介面 (Routed Port)', category: 'Routing', desc: '將實體介面轉為 L3 模式。', code: 'interface Ethernet1/5\n no switchport\n vrf member TENANT_A\n ip address 10.1.1.1/30' },
+    { title: 'SVI (Interface Vlan)', category: 'Routing', desc: '設定 VLAN 的 L3 Gateway IP。', code: 'interface vlan 10\n vrf member TENANT_A\n ip address 192.168.10.254/24\n no shutdown' },
+    { title: 'HSRP 設定 (Anycast Gateway)', category: 'Routing', desc: '設定 NX-OS 的 HSRP (vPC 環境建議用 Anycast Gateway)。', code: 'interface vlan 10\n hsrp 10\n  ip 192.168.10.1\n  priority 110\n  preempt' },
+    { title: 'OSPF 建立', category: 'Routing', desc: '建立 OSPF Process。', code: 'router ospf 1\n vrf TENANT_A\n router-id 1.1.1.1' },
+    { title: 'OSPF 介面宣告', category: 'Routing', desc: '在介面上啟用 OSPF。', code: 'interface Ethernet1/5\n ip router ospf 1 area 0.0.0.0' },
+    { title: 'BGP 建立 (基本)', category: 'Routing', desc: '建立 BGP AS。', code: 'router bgp 65001\n router-id 1.1.1.1\n address-family ipv4 unicast' },
+    { title: 'BGP 鄰居設定', category: 'Routing', desc: '設定 Neighbor。', code: 'router bgp 65001\n neighbor 10.1.1.2\n  remote-as 65002\n  address-family ipv4 unicast' },
+    { title: '靜態路由 (Static Route)', category: 'Routing', desc: '指定靜態路徑。', code: 'vrf context TENANT_A\n ip route 0.0.0.0/0 10.1.1.254' },
+    { title: 'Show 路由表 (VRF)', category: 'Routing', desc: '查看特定 VRF 的路由。', code: 'show ip route vrf TENANT_A' },
+    { title: 'Show BGP Summary', category: 'Routing', desc: '查看 BGP 鄰居狀態。', code: 'show bgp ipv4 unicast summary vrf all' },
+
+    // ================= 5. VXLAN & EVPN (Data Center Overlay) =================
+    { title: '啟用 VXLAN 相關 Feature', category: 'VXLAN', desc: '前置作業。', code: 'feature nv overlay\nfeature vn-segment-vlan-based\nnv overlay evpn' },
+    { title: 'NVE 介面設定 (VTEP)', category: 'VXLAN', desc: '建立 VXLAN Tunnel Endpoint 介面。', code: 'interface nve1\n no shutdown\n source-interface loopback0\n host-reachability protocol bgp\n member vni 10000 mcast-group 239.1.1.1' },
+    { title: 'VLAN 對應 VNI (L2 VNI)', category: 'VXLAN', desc: '將 VLAN 映射到 VXLAN ID。', code: 'vlan 10\n vn-segment 10010' },
+    { title: 'VRF 對應 VNI (L3 VNI)', category: 'VXLAN', desc: '將 VRF 映射到 VXLAN ID (Routing 用)。', code: 'vlan 999\n vn-segment 50999\nvrf context TENANT_A\n vni 50999' },
+    { title: 'BGP EVPN 設定', category: 'VXLAN', desc: '設定 EVPN Address Family 交換 MAC/IP。', code: 'router bgp 65001\n neighbor 192.168.0.2\n  address-family l2vpn evpn\n   send-community extended' },
+    { title: '設定 RD/RT (EVPN)', category: 'VXLAN', desc: '設定 Route Distinguisher 與 Route Target。', code: 'vrf context TENANT_A\n rd auto\n address-family ipv4 unicast\n  route-target both auto\n  route-target both auto evpn' },
+    { title: 'Show NVE Peers', category: 'VXLAN', desc: '查看 VXLAN 隧道建立狀態。', code: 'show nve peers' },
+    { title: 'Show NVE VNI', category: 'VXLAN', desc: '查看 VNI 狀態。', code: 'show nve vni' },
+    { title: 'Show L2Route EVPN', category: 'VXLAN', desc: '查看 EVPN 學習到的 MAC 地址。', code: 'show l2route evpn mac all' },
+    { title: 'Show BGP EVPN', category: 'VXLAN', desc: '查看 BGP EVPN 路由表。', code: 'show bgp l2vpn evpn' },
+
+    // ================= 6. 安全與存取控制 (Security & ACL) =================
+    { title: 'IP ACL (存取控制列表)', category: 'Security', desc: '建立 L3 ACL。', code: 'ip access-list BLOCK_WEB\n deny tcp any any eq 80\n permit ip any any' },
+    { title: '應用 ACL 到介面', category: 'Security', desc: '將 ACL 套用到介面 Inbound/Outbound。', code: 'interface Ethernet1/1\n ip access-group BLOCK_WEB in' },
+    { title: 'CoPP (Control Plane Policing)', category: 'Security', desc: '保護 CPU 不被攻擊 (使用預設策略)。', code: 'copp profile strict' },
+    { title: 'DHCP Snooping', category: 'Security', desc: '防止非法 DHCP Server。', code: 'ip dhcp snooping\nip dhcp snooping vlan 10' },
+    { title: 'DAI (Dynamic ARP Inspection)', category: 'Security', desc: '防止 ARP 欺騙攻擊。', code: 'ip arp inspection vlan 10' },
+    { title: 'IP Source Guard', category: 'Security', desc: '防止 IP 偽冒。', code: 'interface Ethernet1/1\n ip verify source dhcp-snooping-vlan' },
+    { title: '設定 Banner', category: 'Security', desc: '登入警示訊息。', code: 'banner motd # Authorized Access Only #' },
+    { title: '密碼策略', category: 'Security', desc: '強制密碼複雜度。', code: 'password strength-check' },
+    { title: 'AAA Server 設定', category: 'Security', desc: '設定 RADIUS/TACACS+ 認證。', code: 'feature tacacs+\ntacacs-server host 192.168.1.50 key MyKey' },
+
+    // ================= 7. 系統維護與檔案管理 (Maintenance) =================
+    { title: 'Checkpoint (設定快照)', category: 'Management', desc: '修改設定前先建立快照，做錯可還原。', code: 'checkpoint before_change\n# 還原指令:\nrollback running-config checkpoint before_change' },
+    { title: '檔案系統指令', category: 'Management', desc: '查看 Flash 空間與刪除檔案。', code: 'dir bootflash:\ndelete bootflash:old_image.bin' },
+    { title: '設定檔備份', category: 'Management', desc: '將設定檔備份到 TFTP/SCP。', code: 'copy running-config tftp://192.168.1.50/backup.cfg vrf management' },
+    { title: '重啟設備', category: 'Management', desc: '重開機。', code: 'reload' },
+    { title: '清除設定 (Factory Reset)', category: 'Management', desc: '清除所有設定並重開 (慎用)。', code: 'write erase\nreload' },
+    { title: 'Alias (縮寫指令)', category: 'Management', desc: '建立指令別名方便操作。', code: 'cli alias name wr copy run start\ncli alias name shint show interface status' },
+
+    // ================= 8. 進階除錯與監控 (Troubleshooting) =================
+    { title: 'Ethanalyzer (內建 Wireshark)', category: 'Troubleshooting', desc: 'NX-OS 最強大的抓包工具，抓取 CPU 封包。', code: 'ethanalyzer local interface inband capture-filter "icmp" limit-captured-frames 10' },
+    { title: 'Show Tech-Support', category: 'Troubleshooting', desc: '產生完整技術支援報告 (給 TAC 用)。', code: 'show tech-support > bootflash:tech.log' },
+    { title: 'Show Log (即時)', category: 'Troubleshooting', desc: '即時監控 Log 輸出。', code: 'show logging last 20\nshow logging -f' },
+    { title: 'Show Module', category: 'Troubleshooting', desc: '檢查硬體模組狀態與型號。', code: 'show module' },
+    { title: 'Show Inventory', category: 'Troubleshooting', desc: '查看序號 (SN) 與 SFP 資訊。', code: 'show inventory' },
+    { title: 'Show Environment', category: 'Troubleshooting', desc: '檢查風扇、溫度、電源狀態。', code: 'show environment' },
+    { title: 'Show Interface Status', category: 'Troubleshooting', desc: '查看介面連線狀態與 VLAN。', code: 'show interface status' },
+    { title: 'Show Interface Transceiver', category: 'Troubleshooting', desc: '檢查光纖收發光強度 (DOM)。', code: 'show interface transceiver details' },
+    { title: 'Show Monitor (Port Mirror)', category: 'Troubleshooting', desc: '查看 SPAN 側錄設定。', code: 'show monitor' },
+    { title: '設定 SPAN (Port Mirror)', category: 'Troubleshooting', desc: '設定 Port Mirroring 抓包。', code: 'monitor session 1\n source interface Ethernet1/1 both\n destination interface Ethernet1/2' },
+    { title: 'Show Process CPU', category: 'Troubleshooting', desc: '查看 CPU 使用率與高負載程序。', code: 'show processes cpu sort' },
+    { title: 'Show Process Memory', category: 'Troubleshooting', desc: '查看記憶體使用量。', code: 'show processes memory' },
+    { title: 'Show Mac Address Table', category: 'Troubleshooting', desc: '查詢 MAC 位址表。', code: 'show mac address-table' },
+    { title: 'Show CDP Neighbors', category: 'Troubleshooting', desc: '查看鄰居設備詳細資訊。', code: 'show cdp neighbors detail' },
+    { title: 'Show LLDP Neighbors', category: 'Troubleshooting', desc: '查看 LLDP 鄰居。', code: 'show lldp neighbors detail' },
+    { title: 'Ping (指定 VRF)', category: 'Troubleshooting', desc: '在特定 VRF 下進行 Ping 測試。', code: 'ping 8.8.8.8 vrf management' },
+    { title: 'Traceroute (指定 VRF)', category: 'Troubleshooting', desc: '在特定 VRF 下進行路由追蹤。', code: 'traceroute 8.8.8.8 vrf TENANT_A' },
+    { title: 'Debug 開啟', category: 'Troubleshooting', desc: '開啟 Debug (如 OSPF)。', code: 'debug ip ospf event\nshow debug' },{ 
+    title: 'vPC 完整建置範例 (SOP)', 
+    category: 'vPC', 
+    desc: '包含 Primary/Secondary 兩台設備的完整配置流程：Feature啟用 -> Domain設定 -> Peer-Link -> 成員介面。', 
+    code: '! === Step 1: 啟用必要功能 (兩台都要做) ===\nconf t\nfeature vpc\nfeature lacp\n\n! === Step 2: 設定 vPC Domain (注意 Priority 與 Keepalive IP) ===\n! [Switch-1 (Primary)]\nvpc domain 100\n role priority 10                   ! 數字小為 Primary\n peer-keepalive destination 192.168.1.2 source 192.168.1.1 vrf management\n peer-gateway                       ! 優化 L3 轉發 (建議開啟)\n auto-recovery                      ! 斷電復原機制 (建議開啟)\n ip arp synchronize\n\n! [Switch-2 (Secondary)]\nvpc domain 100\n role priority 20                   ! 數字大為 Secondary\n peer-keepalive destination 192.168.1.1 source 192.168.1.2 vrf management\n peer-gateway\n auto-recovery\n ip arp synchronize\n\n! === Step 3: 設定 Peer-Link (兩台配置需一致) ===\ninterface Ethernet1/49-50\n description vPC-PEER-LINK-PHY\n channel-group 1 mode active\n no shutdown\n!\ninterface port-channel 1\n description vPC-PEER-LINK-PO\n switchport mode trunk\n switchport trunk allowed vlan 1-3967\n spanning-tree port type network    ! 重要: 避免 STP 造成中斷\n vpc peer-link                      ! 核心指令\n no shutdown\n\n! === Step 4: 設定 Member Port 連接 Server (兩台配置需一致) ===\ninterface Ethernet1/1\n channel-group 10 mode active\n!\ninterface port-channel 10\n description Server_A_Uplink\n switchport mode trunk\n switchport trunk allowed vlan 10,20\n vpc 10                             ! 綁定 vPC ID 10\n no shutdown\n\n! === Step 5: 驗證 ===\nshow vpc brief                      ! 檢查 vPC Status 是否為 UP' 
+},
+{ 
+    title: 'HSRP over vPC (雙活閘道配置)', 
+    category: 'Routing', 
+    desc: '在 vPC 環境下設定 HSRP 作為伺服器的預設閘道。NX-OS 特性：兩台設備雖分主備，但都會轉發流量 (Active/Active Forwarding)。', 
+    code: '! === 前置準備：啟用 HSRP 功能 ===\nconf t\nfeature hsrp\n\n! === Switch-1 (HSRP Active Role) ===\ninterface Vlan10\n  description SERVER_GATEWAY\n  no shutdown\n  ip address 192.168.10.2/24        ! 實體 IP (兩台要不同)\n  hsrp 10                           ! Group ID 需一致\n    ip 192.168.10.1                 ! 虛擬閘道 IP (VIP)\n    priority 110                    ! 較高者為 Active (預設100)\n    preempt                         ! 搶佔模式: 當我恢復時搶回 Active\n\n! === Switch-2 (HSRP Standby Role) ===\ninterface Vlan10\n  description SERVER_GATEWAY\n  no shutdown\n  ip address 192.168.10.3/24        ! 實體 IP\n  hsrp 10\n    ip 192.168.10.1                 ! 必須與 Switch-1 相同\n    priority 90                     ! 較低者為 Standby\n    preempt\n\n! === 驗證指令 ===\nshow hsrp brief\n! 注意：在 vPC Peer-Link 正常的情況下，\n! 即使顯示 Standby，該設備也會幫忙轉發流量 (Local Forwarding)。' 
+},
+],
+
+                    // ================= LINUX (Server) =================
+                    linux: [
+                        { title: '檔案權限管理', category: 'File System', desc: 'chmod 與 chown 常用範例。', code: '# 遞迴修改擁有者\nchown -R www-data:www-data /var/www/html\n# 修改權限 (755: Dir, 644: File)\nfind . -type d -exec chmod 755 {} \\;\nfind . -type f -exec chmod 644 {} \\;' },
+                        { title: '網路狀態檢查', category: 'Network', desc: '取代 ifconfig 與 netstat 的新指令。', code: '# 顯示 IP\nip a\n# 顯示路由\nip r\n# 顯示監聽中的 Port\nss -tulpn\n# 測試連線\ncurl -v telnet://1.2.3.4:80' },
+                        { title: '系統資源監控', category: 'Monitoring', desc: 'CPU, Memory, Disk 使用量查詢。', code: '# 互動式進程檢視\nhtop\n# 記憶體使用量\nfree -h\n# 硬碟空間\ndf -h\n# 查詢資料夾大小\ndu -sh /var/log/*' },
+                        { title: '服務管理 (Systemd)', category: 'System', desc: '管理背景服務狀態。', code: 'systemctl status nginx\nsystemctl restart nginx\nsystemctl enable nginx  # 開機自啟\njournalctl -u nginx -f  # 即時查看 Log' },
+                        { title: '壓縮與解壓縮', category: 'File Ops', desc: '常用的 tar 指令。', code: '# 壓縮\ntar -czvf backup.tar.gz /home/user\n# 解壓縮\ntar -xzvf backup.tar.gz -C /tmp' },
+                        { title: '搜尋檔案與內容', category: 'File Ops', desc: 'find 與 grep 組合技。', code: '# 找檔名\nfind /etc -name "*.conf"\n# 找檔案內容\ngrep -rn "error" /var/log/syslog' },
+                        { title: '列出檔案 (詳細)', category: 'File', desc: '列出當前目錄下的所有檔案 (包含隱藏檔)，並顯示詳細資訊。', code: 'ls -lah' },
+                        { title: '切換目錄 (CD)', category: 'File', desc: '切換到指定目錄 (~ 代表家目錄, .. 代表上一層)。', code: 'cd /var/log\ncd ~' },
+                        { title: '顯示目前路徑', category: 'File', desc: '顯示目前所在的完整路徑 (Print Working Directory)。', code: 'pwd' },
+                        { title: '建立目錄', category: 'File', desc: '建立新資料夾 (-p 可建立多層目錄)。', code: 'mkdir new_folder\nmkdir -p /tmp/folder/subfolder' },
+                        { title: '建立空檔案 / 更新時間', category: 'File', desc: '建立一個空檔案，或更新已存在檔案的時間戳記。', code: 'touch filename.txt' },
+                        { title: '複製檔案/目錄', category: 'File', desc: '複製檔案或整個資料夾 (-r 遞迴複製)。', code: 'cp file.txt /tmp/\ncp -r folder_a folder_b' },
+                        { title: '移動或重新命名', category: 'File', desc: '移動檔案，若在同目錄下移動則等同重新命名。', code: 'mv old_name.txt new_name.txt\nmv file.txt /tmp/' },
+                        { title: '刪除檔案', category: 'File', desc: '強制刪除檔案或目錄 (慎用 -rf)。', code: 'rm file.txt\nrm -rf folder_name' },
+                        { title: '建立連結 (Link)', category: 'File', desc: '建立軟連結 (Shortcut)，指向原始檔案。', code: 'ln -s /path/to/original /path/to/link' },
+                        { title: '查看檔案類型', category: 'File', desc: '檢查檔案是文字檔、執行檔還是圖片。', code: 'file filename' },
+
+                            // --- 檔案內容查看 (File Viewing) ---
+                        { title: '查看檔案內容 (Cat)', category: 'View', desc: '一次顯示整個檔案內容 (適合小檔案)。', code: 'cat /etc/os-release' },
+                        { title: '分頁查看 (Less)', category: 'View', desc: '分頁查看大檔案 (按 q 離開, / 可搜尋)。', code: 'less /var/log/syslog' },
+                        { title: '查看檔案開頭', category: 'View', desc: '查看檔案前 10 行。', code: 'head -n 10 filename.txt' },
+                        { title: '查看檔案結尾 (Tail)', category: 'View', desc: '查看檔案最後 10 行，常用於看 Log。', code: 'tail -n 10 filename.txt' },
+                        { title: '即時監控 Log', category: 'View', desc: '即時顯示檔案新增的內容 (除錯必備)。', code: 'tail -f /var/log/nginx/access.log' },
+
+                            // --- 搜尋與過濾 (Search & Grep) ---
+                        { title: '搜尋關鍵字 (Grep)', category: 'Search', desc: '在檔案中搜尋特定字串 (-i 不分大小寫, -r 遞迴)。', code: 'grep "error" /var/log/syslog\ngrep -rn "config" /etc/' },
+                        { title: '尋找檔案 (Find)', category: 'Search', desc: '依照檔名搜尋檔案。', code: 'find /var -name "*.log"\nfind . -name "test.py"' },
+                        { title: '尋找大檔案', category: 'Search', desc: '找出大於 100MB 的檔案。', code: 'find / -type f -size +100M' },
+                        { title: '尋找指令位置', category: 'Search', desc: '查看指令的執行檔路徑。', code: 'which java\nwhereis nginx' },
+
+                            // --- 系統資訊與監控 (System & Monitor) ---
+                        { title: '查看系統版本', category: 'System', desc: '查看 Linux 核心版本與發行版資訊。', code: 'uname -a\ncat /etc/*release' },
+                        { title: '查看磁碟空間 (Disk)', category: 'System', desc: '查看硬碟使用量 (-h 以人類可讀格式顯示)。', code: 'df -h' },
+                        { title: '查看目錄大小 (Du)', category: 'System', desc: '查看目前目錄下各資料夾佔用的空間。', code: 'du -sh *\ndu -h --max-depth=1' },
+                        { title: '查看記憶體 (Memory)', category: 'System', desc: '查看 RAM 與 Swap 使用量。', code: 'free -h' },
+                        { title: '即時系統監控 (Top)', category: 'System', desc: '查看 CPU、記憶體與執行中的程序 (按 q 離開)。', code: 'top' },
+                        { title: '進階系統監控 (Htop)', category: 'System', desc: '比 Top 更人性化的介面 (需先安裝)。', code: 'htop' },
+                        { title: '查看 CPU 資訊', category: 'System', desc: '顯示 CPU 架構與核心數。', code: 'lscpu' },
+                        { title: '查看開機時間 (Uptime)', category: 'System', desc: '查看系統運作時間與負載 (Load Average)。', code: 'uptime' },
+                        { title: '查看歷史指令', category: 'System', desc: '列出使用者輸入過的指令紀錄。', code: 'history\nhistory | grep "docker"' },
+
+                            // --- 行程管理 (Process Management) ---
+                        { title: '列出所有行程 (PS)', category: 'Process', desc: '查看目前系統所有運作中的程式 (aux 是常用參數)。', code: 'ps aux | grep nginx' },
+                        { title: '砍掉行程 (Kill)', category: 'Process', desc: '終止指定 PID 的程式 (-9 為強制終止)。', code: 'kill 1234\nkill -9 1234' },
+                        { title: '依名稱砍行程', category: 'Process', desc: '直接用程式名稱終止所有相關行程。', code: 'pkill nginx\nkillall httpd' },
+                        { title: '背景執行 (Nohup)', category: 'Process', desc: '讓程式在背景執行，即使登出也不會中斷。', code: 'nohup python script.py & ' },
+                        { title: '查看 Port 佔用', category: 'Network', desc: '查看哪些程式佔用了網路 Port。', code: 'netstat -tulpn\nss -tulnp' },
+
+                            // --- 使用者與權限 (User & Permission) ---
+                        { title: '變更權限 (Chmod)', category: 'Perm', desc: '修改檔案權限 (777 全部開放, 755 常見執行權限)。', code: 'chmod 755 script.sh\nchmod +x script.sh' },
+                        { title: '變更擁有者 (Chown)', category: 'Perm', desc: '修改檔案的擁有者與群組 (user:group)。', code: 'chown www-data:www-data /var/www/html' },
+                        { title: '切換使用者 (Su)', category: 'User', desc: '切換成 root 或其他使用者。', code: 'sudo -i\nsu - username' },
+                        { title: '查看目前使用者', category: 'User', desc: '顯示目前登入的帳號與 UID/GID。', code: 'whoami\nid' },
+                        { title: '新增使用者', category: 'User', desc: '建立新帳號並指定家目錄。', code: 'useradd -m newuser' },
+                        { title: '修改密碼', category: 'User', desc: '修改目前或特定使用者的密碼。', code: 'passwd\npasswd newuser' },
+                        { title: '查看登入紀錄', category: 'User', desc: '查看誰登入過系統 (last) 與目前誰在線上 (w)。', code: 'last\nw' },
+
+                            // --- 網路操作 (Network) ---
+                        { title: '查看 IP 位址', category: 'Network', desc: '查看網卡 IP 設定 (取代舊的 ifconfig)。', code: 'ip addr show\nip a' },
+                        { title: '測試連線 (Ping)', category: 'Network', desc: '測試與目標主機的連線 (按 Ctrl+C 停止)。', code: 'ping 8.8.8.8\nping google.com -c 4' },
+                        { title: '下載檔案 (Wget)', category: 'Network', desc: '從網路下載檔案。', code: 'wget http://example.com/file.zip' },
+                        { title: '測試網頁回應 (Curl)', category: 'Network', desc: '測試 API 或網頁是否正常 (-I 只看 Header)。', code: 'curl -I https://www.google.com\ncurl http://localhost:8080' },
+                        { title: '遠端連線 (SSH)', category: 'Network', desc: '登入遠端 Linux 主機。', code: 'ssh user@192.168.1.10\nssh -p 2222 user@host' },
+                        { title: '遠端複製 (SCP)', category: 'Network', desc: '透過 SSH 傳輸檔案。', code: 'scp localfile.txt user@remote:/tmp/\nscp user@remote:/var/log/syslog .' },
+                        { title: 'DNS 查詢 (Dig)', category: 'Network', desc: '查詢網域的 DNS 紀錄。', code: 'dig google.com\nnslookup google.com' },
+                        { title: '追蹤路由 (Traceroute)', category: 'Network', desc: '查看封包經過的節點。', code: 'traceroute 8.8.8.8' },
+
+                            // --- 壓縮與解壓縮 (Archive) ---
+                        { title: '解壓 Tar', category: 'Archive', desc: '解壓縮 .tar.gz 檔案。', code: 'tar -zxvf file.tar.gz' },
+                        { title: '壓縮 Tar', category: 'Archive', desc: '將目錄壓縮成 .tar.gz。', code: 'tar -czvf archive.tar.gz /path/to/folder' },
+                        { title: '解壓 Zip', category: 'Archive', desc: '解壓縮 .zip 檔案。', code: 'unzip file.zip' },
+                        { title: '壓縮 Zip', category: 'Archive', desc: '將檔案壓縮成 .zip。', code: 'zip -r archive.zip folder/' },
+
+                            // --- 軟體安裝 (Package Manager) ---
+                        { title: '更新清單 (Ubuntu/Debian)', category: 'Pkg', desc: '更新 APT 套件清單。', code: 'sudo apt update' },
+                        { title: '安裝軟體 (Ubuntu/Debian)', category: 'Pkg', desc: '安裝指定套件。', code: 'sudo apt install git vim' },
+                        { title: '系統升級 (Ubuntu/Debian)', category: 'Pkg', desc: '升級所有已安裝的套件。', code: 'sudo apt upgrade' },
+                        { title: '安裝軟體 (CentOS/RHEL)', category: 'Pkg', desc: '使用 Yum/Dnf 安裝軟體。', code: 'sudo yum install epel-release\nsudo dnf install nginx' },
+
+                            // --- 服務管理 (Systemd) ---
+                        { title: '啟動服務', category: 'Service', desc: '啟動 Systemd 服務 (如 nginx, docker)。', code: 'sudo systemctl start nginx' },
+                        { title: '停止服務', category: 'Service', desc: '停止服務運作。', code: 'sudo systemctl stop nginx' },
+                        { title: '重啟服務', category: 'Service', desc: '重新啟動服務。', code: 'sudo systemctl restart nginx' },
+                        { title: '查看服務狀態', category: 'Service', desc: '檢查服務是否正在執行。', code: 'sudo systemctl status nginx' },
+                        { title: '開機自動啟動', category: 'Service', desc: '設定服務隨系統開機啟動。', code: 'sudo systemctl enable nginx' },
+                        { title: '查看 Log (Journalctl)', category: 'Service', desc: '查看 Systemd 服務的日誌。', code: 'journalctl -u nginx -f' },
+
+                             // --- 文字處理與管線 (Text & Pipe) ---
+                        { title: '計算行數 (WC)', category: 'Text', desc: '計算檔案有多少行 (-l)。', code: 'wc -l filename.txt' },
+                        { title: '排序 (Sort)', category: 'Text', desc: '對檔案內容進行排序 (-n 數字排序, -r 反向)。', code: 'sort names.txt\nsort -nr numbers.txt' },
+                        { title: '去除重複 (Uniq)', category: 'Text', desc: '過濾相鄰的重複行 (通常配合 sort 使用)。', code: 'sort access.log | uniq -c' },
+                        { title: '取出欄位 (Cut)', category: 'Text', desc: '依分隔符號取出特定欄位 (-d 分隔符號 -f 第幾欄)。', code: 'cut -d ":" -f 1 /etc/passwd' },
+                        { title: '字串取代 (Sed)', category: 'Text', desc: '將檔案中的字串 A 取代為 B (s/old/new/g)。', code: 'sed "s/error/ERROR/g" log.txt' },
+                        { title: '強大文本分析 (Awk)', category: 'Text', desc: '列印特定欄位 (例如印出 Process 的 PID)。', code: 'ps aux | awk \'{print $2}\'' },
+
+                            // --- 其他實用指令 (Misc) ---
+                        { title: '清空螢幕', category: 'Misc', desc: '清除終端機畫面 (快捷鍵 Ctrl+L)。', code: 'clear' },
+                        { title: '設定別名 (Alias)', category: 'Misc', desc: '為長指令設定簡寫 (暫時生效)。', code: 'alias ll="ls -lah"' },
+                        { title: '重複執行 (Watch)', category: 'Misc', desc: '每隔 2 秒執行一次指令 (適合監控)。', code: 'watch -n 1 "date; free -h"' },
+                        { title: '關機與重啟', category: 'Misc', desc: '安全關機或重新啟動。', code: 'shutdown -h now\nreboot' },
+                        { title: '輸出字串 (Echo)', category: 'Misc', desc: '印出變數或寫入檔案。', code: 'echo "Hello World" > hello.txt\necho $PATH' }
+                        
+                    ],
+
+                    // ================= WINDOWS (CMD/PowerShell) =================
+                    windows: [
+                        { title: '網路配置查詢 (IP)', category: 'Network', desc: '查看詳細 IP、MAC 與 DNS 資訊。', code: ':: CMD\nipconfig /all\n\n# PowerShell\nGet-NetIPAddress | Format-Table' },
+                        { title: '測試 Port 連通性', category: 'Network', desc: 'PowerShell 版的 Telnet，非常實用。', code: '# PowerShell (取代 Telnet)\nTest-NetConnection -ComputerName 8.8.8.8 -Port 53\n\n# 簡寫\ntnc 192.168.1.1 -p 443' },
+                        { title: '路由追蹤 (Traceroute)', category: 'Troubleshooting', desc: '路徑追蹤指令。', code: ':: CMD\ntracert -d 8.8.8.8\n\n# PowerShell\nTest-NetConnection 8.8.8.8 -TraceRoute' },
+                        { title: '查看系統資訊', category: 'System', desc: '查看開機時間、OS 版本、修補程式。', code: ':: CMD\nsysteminfo | findstr /C:"OS"\n\n# PowerShell\nGet-ComputerInfo' },
+                        { title: '檔案複製 (Robocopy)', category: 'File Ops', desc: '微軟最強大的檔案複製工具 (含權限/鏡像)。', code: ':: 鏡像備份 (來源 -> 目的)\nrobocopy C:\\Source D:\\Backup /MIR /MT:32 /R:3 /W:5 /LOG:backup.log' },
+                        { title: '使用者與群組管理', category: 'AD/User', desc: '管理本機使用者帳號。', code: ':: 新增使用者\nnet user username password /add\n:: 加入管理員群組\nnet localgroup Administrators username /add' }
+                    ],
+
+                    // ================= PALO ALTO =================
+                    palo: [
+                        { title: 'CLI 設定 Management IP', category: 'Basic', desc: '出廠預設或無 GUI 時使用。', code: 'configure\nset deviceconfig system ip-address 192.168.1.99 netmask 255.255.255.0 default-gateway 192.168.1.254\ncommit' },
+                        { title: '檢查 Session 表', category: 'Monitoring', desc: '查看目前連線狀態。', code: 'show session info\nshow session id [ID]\nshow session all filter source 10.1.1.1' },
+                        { title: 'CLI 搜尋 Log', category: 'Troubleshooting', desc: '在終端機快速過濾 Traffic Log。', code: 'show log traffic direction equal backward limit 10\nshow log system severity equal critical' },// === 請將以下內容追加到 database.palo 陣列中 ===
+
+{ 
+    title: '查修封包丟棄原因 (Global Counters)', 
+    category: 'Troubleshooting', 
+    desc: 'PA 最強大的指令。當你看不到 Traffic Log，但封包卻不通時，用這個指令查看底層 Drop 原因。', 
+    code: '# 1. 先設定過濾器 (只看特定 IP)\ndebug dataplane packet-diag set filter match source 192.168.1.10 destination 8.8.8.8\n\n# 2. 啟用過濾\ndebug dataplane packet-diag set filter on\n\n# 3. 查看計數器 (delta yes 代表只看剛發生的)\nshow counter global filter packet-filter yes delta yes' 
+},
+{ 
+    title: '檢查光纖模組訊號 (Transceiver/DDMI)', 
+    category: 'Hardware', 
+    desc: '查看 SFP 光模組的發光強度 (TX Power) 與收光強度 (RX Power)，判斷是否光衰過大。', 
+    code: 'show system state filter-pretty sys.s1.p*.phy\n\n# 或者針對特定 Port (視型號而定)\nshow system state filter-pretty sys.s1.p1.phy' 
+},
+{ 
+    title: 'GlobalProtect 線上使用者', 
+    category: 'VPN', 
+    desc: '查看目前有哪些 GP VPN 使用者連線中，以及他們的 Public IP 和獲取的內網 IP。', 
+    code: 'show global-protect-gateway current-user\n\n# 強制踢除特定使用者\nrequest global-protect-gateway-client-logout user <username> gateway <gateway-name> reason force-logout' 
+},
+{ 
+    title: '測試 URL 分類 (Category)', 
+    category: 'Security', 
+    desc: '測試特定網址被歸類在哪個類別 (用於除錯 URL Filtering Block)。', 
+    code: 'test url www.playboy.com\ntest url google.com' 
+},
+{ 
+    title: '手動觸發動態更新 (App/Threat)', 
+    category: 'Management', 
+    desc: '當自動更新失敗時，手動下載並安裝最新的 Antivirus 或 Application 特徵碼。', 
+    code: '# 下載最新版\nrequest content upgrade download latest\n\n# 安裝 (需等待下載完成)\nrequest content upgrade install version latest' 
+},
+{ 
+    title: '清除 ARP 快取', 
+    category: 'Network', 
+    desc: '當更換設備或網路卡住時，清除特定介面或 IP 的 ARP 紀錄。', 
+    code: 'clear arp all\nclear arp interface ethernet1/1 ip 10.1.1.254' 
+},
+{ 
+    title: '查看 Management Plane 記憶體', 
+    category: 'System', 
+    desc: '檢查管理層記憶體是否不足 (通常是 Web UI 變慢的主因)。', 
+    code: 'debug software show-memory-limit' 
+},
+{ 
+    title: '測試 NAT 策略預覽', 
+    category: 'Troubleshooting', 
+    desc: '預測特定流量會命中哪一條 NAT 規則，以及轉換後的 IP/Port 為何。', 
+    code: 'test nat-policy-match source 10.1.1.50 destination 8.8.8.8 protocol 6 destination-port 80' 
+},
+{ 
+    title: '查看 URL 分類狀態', 
+    category: 'Troubleshooting', 
+    desc: '測試特定網址的分類結果。', 
+    code: 'test url <網址>' 
+},
+
+ { 
+        title: 'CLI 設定 Management IP', 
+        category: 'Basic', 
+        desc: '出廠預設或無 GUI 時使用。', 
+        code: 'configure\nset deviceconfig system ip-address 192.168.1.99 netmask 255.255.255.0 default-gateway 192.168.1.254\ncommit' 
+    },
+    { 
+        title: '檢查 Session 表', 
+        category: 'Monitoring', 
+        desc: '查看目前連線狀態。', 
+        code: 'show session info\nshow session id [ID]\nshow session all filter source 10.1.1.1' 
+    },
+    { 
+        title: 'CLI 搜尋 Log', 
+        category: 'Troubleshooting', 
+        desc: '在終端機快速過濾 Traffic Log。', 
+        code: 'show log traffic direction equal backward limit 10\nshow log system severity equal critical' 
+    },
+    
+    // --- 新追加的內容 ---
+    { 
+        title: '查修封包丟棄原因 (Global Counters)', 
+        category: 'Troubleshooting', 
+        desc: 'PA 最強大的指令。當你看不到 Traffic Log，但封包卻不通時，用這個指令查看底層 Drop 原因。', 
+        code: '# 1. 先設定過濾器 (只看特定 IP)\ndebug dataplane packet-diag set filter match source 192.168.1.10 destination 8.8.8.8\n\n# 2. 啟用過濾\ndebug dataplane packet-diag set filter on\n\n# 3. 查看計數器 (delta yes 代表只看剛發生的)\nshow counter global filter packet-filter yes delta yes' 
+    },
+    { 
+        title: '檢查光纖模組訊號 (Transceiver/DDMI)', 
+        category: 'Hardware', 
+        desc: '查看 SFP 光模組的發光強度 (TX Power) 與收光強度 (RX Power)，判斷是否光衰過大。', 
+        code: 'show system state filter-pretty sys.s1.p*.phy\n\n# 或者針對特定 Port (視型號而定)\nshow system state filter-pretty sys.s1.p1.phy' 
+    },
+    { 
+        title: 'GlobalProtect 線上使用者', 
+        category: 'VPN', 
+        desc: '查看目前有哪些 GP VPN 使用者連線中，以及他們的 Public IP 和獲取的內網 IP。', 
+        code: 'show global-protect-gateway current-user\n\n# 強制踢除特定使用者\nrequest global-protect-gateway-client-logout user <username> gateway <gateway-name> reason force-logout' 
+    },
+    { 
+        title: '測試 URL 分類 (Category)', 
+        category: 'Security', 
+        desc: '測試特定網址被歸類在哪個類別 (用於除錯 URL Filtering Block)。', 
+        code: 'test url www.playboy.com\ntest url google.com' 
+    },
+    { 
+        title: '手動觸發動態更新 (App/Threat)', 
+        category: 'Management', 
+        desc: '當自動更新失敗時，手動下載並安裝最新的 Antivirus 或 Application 特徵碼。', 
+        code: '# 下載最新版\nrequest content upgrade download latest\n\n# 安裝 (需等待下載完成)\nrequest content upgrade install version latest' 
+    },
+    { 
+        title: '清除 ARP 快取', 
+        category: 'Network', 
+        desc: '當更換設備或網路卡住時，清除特定介面或 IP 的 ARP 紀錄。', 
+        code: 'clear arp all\nclear arp interface ethernet1/1 ip 10.1.1.254' 
+    },
+    { 
+        title: '查看 Management Plane 記憶體', 
+        category: 'System', 
+        desc: '檢查管理層記憶體是否不足 (通常是 Web UI 變慢的主因)。', 
+        code: 'debug software show-memory-limit' 
+    },
+    { 
+        title: '測試 NAT 策略預覽', 
+        category: 'Troubleshooting', 
+        desc: '預測特定流量會命中哪一條 NAT 規則，以及轉換後的 IP/Port 為何。', 
+        code: 'test nat-policy-match source 10.1.1.50 destination 8.8.8.8 protocol 6 destination-port 80' 
+    },
+
+    // --- 第一類：系統與管理 (System & Management) ---
+    { 
+        title: '查看系統基本資訊', 
+        category: 'System', 
+        desc: '顯示設備型號、序號、軟體版本、Uptime 與管理 IP。', 
+        code: 'show system info' 
+    },
+    { 
+        title: '查看系統資源使用率', 
+        category: 'System', 
+        desc: '查看 Management Plane (MP) 與 Data Plane (DP) 的 CPU/記憶體使用率。', 
+        code: 'show system resources' 
+    },
+    { 
+        title: '查看硬碟空間', 
+        category: 'System', 
+        desc: '檢查硬碟各分區的使用量，避免 Log 塞滿導致系統異常。', 
+        code: 'show system disk-space' 
+    },
+    { 
+        title: '重啟系統 (Restart)', 
+        category: 'System', 
+        desc: '重新啟動防火牆 (需確認是否為 HA 環境)。', 
+        code: 'request restart system' 
+    },
+    { 
+        title: '關機 (Shutdown)', 
+        category: 'System', 
+        desc: '安全關閉防火牆電源。', 
+        code: 'request shutdown system' 
+    },
+    { 
+        title: '查看目前管理員連線', 
+        category: 'System', 
+        desc: '列出目前登入 CLI 或 Web 的管理員。', 
+        code: 'show admins' 
+    },
+    { 
+        title: '踢除管理員', 
+        category: 'System', 
+        desc: '強制登出特定的管理員連線。', 
+        code: 'delete admin-sessions username <admin_name>' 
+    },
+    { 
+        title: '查看背景工作狀態 (Jobs)', 
+        category: 'System', 
+        desc: '查看 Commit 進度、報告生成或軟體下載的狀態 (ID 為 0 代表查看全部)。', 
+        code: 'show jobs all' 
+    },
+    { 
+        title: '查看授權狀態', 
+        category: 'System', 
+        desc: '檢查 Threat Prevention, URL Filtering 等授權是否過期。', 
+        code: 'request license info' 
+    },
+    { 
+        title: '檢查軟體更新', 
+        category: 'System', 
+        desc: '線上檢查是否有新的 PAN-OS 版本可下載。', 
+        code: 'request system software check' 
+    },
+
+    // --- 第二類：設定與維護 (Configuration) ---
+    { 
+        title: '進入設定模式', 
+        category: 'Config', 
+        desc: '從維運模式 (>) 進入設定模式 (#)。', 
+        code: 'configure' 
+    },
+    { 
+        title: '切換 CLI 顯示格式 (必用)', 
+        category: 'Config', 
+        desc: '將設定檔顯示格式改為 set 指令模式，方便複製貼上備份。', 
+        code: 'set cli config-output-format set' 
+    },
+    { 
+        title: '查看目前候選設定', 
+        category: 'Config', 
+        desc: '查看尚未 Commit 的設定內容 (Candidate Config)。', 
+        code: 'show | match <關鍵字>' 
+    },
+    { 
+        title: '提交設定 (Commit)', 
+        category: 'Config', 
+        desc: '將設定生效。', 
+        code: 'commit' 
+    },
+    { 
+        title: '強制提交 (Force Commit)', 
+        category: 'Config', 
+        desc: '當 Commit 失敗或顯示無變更時，強制重新編譯並套用設定。', 
+        code: 'commit force' 
+    },
+    { 
+        title: '比對設定差異', 
+        category: 'Config', 
+        desc: '比較 Running Config 與 Candidate Config 的差異。', 
+        code: 'show config diff' 
+    },
+    { 
+        title: '還原設定 (Revert)', 
+        category: 'Config', 
+        desc: '放棄目前編輯的設定，還原到上一次 Commit 的狀態。', 
+        code: 'revert config' 
+    },
+    { 
+        title: '載入設定檔', 
+        category: 'Config', 
+        desc: '載入儲存的設定檔 (例如 factory-default.xml)。', 
+        code: 'load config from <filename>' 
+    },
+    { 
+        title: '設定管理介面 IP', 
+        category: 'Config', 
+        desc: '修改 Management Port 的 IP 與 Gateway (需在 config 模式)。', 
+        code: 'set deviceconfig system ip-address <IP> netmask <Mask> default-gateway <GW>' 
+    },
+    { 
+        title: '設定 DNS 伺服器', 
+        category: 'Config', 
+        desc: '修改防火牆使用的 DNS (需在 config 模式)。', 
+        code: 'set deviceconfig system dns-setting servers primary <DNS_IP>' 
+    },
+
+    // --- 第三類：網路與路由 (Network & Routing) ---
+    { 
+        title: '查看介面狀態 (邏輯)', 
+        category: 'Network', 
+        desc: '查看介面 IP、Zone、VLAN 對應資訊。', 
+        code: 'show interface logical' 
+    },
+    { 
+        title: '查看介面硬體狀態', 
+        category: 'Network', 
+        desc: '查看 Link Speed, Duplex, MAC Address 以及錯誤計數 (Errors)。', 
+        code: 'show interface hardware' 
+    },
+    { 
+        title: '查看路由表 (Route)', 
+        category: 'Network', 
+        desc: '列出 Routing Table。', 
+        code: 'show routing route' 
+    },
+    { 
+        title: '路由查閱 (Route Lookup)', 
+        category: 'Network', 
+        desc: '模擬封包，查詢防火牆會將特定 IP 送往哪個介面與下一跳。', 
+        code: 'test routing fib-lookup ip <目標IP> virtual-router default' 
+    },
+    { 
+        title: '查看 ARP 表', 
+        category: 'Network', 
+        desc: '查看 IP 與 MAC 的對應表。', 
+        code: 'show arp all' 
+    },
+    { 
+        title: '查看 MAC Address Table', 
+        category: 'Network', 
+        desc: '當介面為 Layer 2 或 Virtual Wire 模式時，查看 MAC 表。', 
+        code: 'show mac all' 
+    },
+    { 
+        title: 'Ping 測試 (帶來源)', 
+        category: 'Network', 
+        desc: '指定來源介面進行 Ping 測試。', 
+        code: 'ping source <介面IP> host <目標IP>' 
+    },
+    { 
+        title: 'Traceroute 測試', 
+        category: 'Network', 
+        desc: '追蹤路由路徑。', 
+        code: 'traceroute host <目標IP>' 
+    },
+    { 
+        title: '查看 DHCP Server 租約', 
+        category: 'Network', 
+        desc: '若防火牆作為 DHCP Server，查看已發放的 IP。', 
+        code: 'show dhcp server lease all' 
+    },
+    { 
+        title: '清除 DHCP 租約', 
+        category: 'Network', 
+        desc: '清除特定介面的 DHCP 租約紀錄。', 
+        code: 'clear dhcp lease interface <介面名> all' 
+    },
+
+    // --- 第四類：連線與流量除錯 (Session & Traffic) ---
+    { 
+        title: '查看 Session 統計', 
+        category: 'Session', 
+        desc: '查看目前連線總數、TCP/UDP 佔比與最大限制。', 
+        code: 'show session info' 
+    },
+    { 
+        title: '查看特定 Session 詳細資料', 
+        category: 'Session', 
+        desc: '查看某個 Session ID 的詳細狀態 (Flow, Timeout, Application)。', 
+        code: 'show session id <ID>' 
+    },
+    { 
+        title: '搜尋 Session (過濾)', 
+        category: 'Session', 
+        desc: '搜尋特定來源與目的 IP 的連線。', 
+        code: 'show session all filter source <Src_IP> destination <Dst_IP>' 
+    },
+    { 
+        title: '搜尋特定應用程式 Session', 
+        category: 'Session', 
+        desc: '列出所有正在使用特定應用程式 (如 ssl, youtube) 的連線。', 
+        code: 'show session all filter application <app_name>' 
+    },
+    { 
+        title: '清除 Session (特定 ID)', 
+        category: 'Session', 
+        desc: '中斷指定的連線。', 
+        code: 'clear session id <ID>' 
+    },
+    { 
+        title: '清除 Session (特定 IP)', 
+        category: 'Session', 
+        desc: '清除所有與該 IP 相關的連線 (慎用)。', 
+        code: 'clear session all filter source <IP>' 
+    },
+    { 
+        title: '測試安全策略 (Policy Match)', 
+        category: 'Troubleshooting', 
+        desc: '非常實用！模擬流量來測試會命中哪一條 Security Policy。', 
+        code: 'test security-policy-match source <Src_IP> destination <Dst_IP> protocol 6 destination-port 80' 
+    },
+    { 
+        title: '測試 NAT 策略', 
+        category: 'Troubleshooting', 
+        desc: '測試流量會命中哪一條 NAT 規則以及轉換後的 IP。', 
+        code: 'test nat-policy-match source <Src_IP> destination <Dst_IP> protocol 6 destination-port 80' 
+    },
+    { 
+        title: '查看 NAT 轉換表', 
+        category: 'Session', 
+        desc: '查看目前的 NAT 資源池使用狀況。', 
+        code: 'show running ip-pool' 
+    },
+
+    // --- 第五類：VPN (IPsec & GlobalProtect) ---
+    { 
+        title: '查看 IKE (Phase 1) 狀態', 
+        category: 'VPN', 
+        desc: '查看 IKE SA 協商狀態。', 
+        code: 'show vpn ike-sa' 
+    },
+    { 
+        title: '查看 IPsec (Phase 2) 狀態', 
+        category: 'VPN', 
+        desc: '查看 IPsec Tunnel 狀態與 SPI 資訊。', 
+        code: 'show vpn ipsec-sa' 
+    },
+    { 
+        title: '查看 VPN 通道流量', 
+        category: 'VPN', 
+        desc: '查看 VPN Tunnel 的封包進出計數與錯誤。', 
+        code: 'show vpn flow' 
+    },
+    { 
+        title: '測試 VPN 路由連通性', 
+        category: 'VPN', 
+        desc: '測試 VPN 通道是否正常 (需指定 Tunnel 介面)。', 
+        code: 'test vpn ipsec-sa tunnel <tunnel_name>' 
+    },
+    { 
+        title: '查看 GlobalProtect 目前使用者', 
+        category: 'VPN', 
+        desc: '列出目前連線的 GP 使用者資訊 (包含私人 IP 與公網 IP)。', 
+        code: 'show global-protect-gateway current-user' 
+    },
+    { 
+        title: '踢除 GlobalProtect 使用者', 
+        category: 'VPN', 
+        desc: '強制登出特定的 GP 使用者 (需搭配 domain\\user)。', 
+        code: 'request global-protect-gateway-client-logout user <domain\\user> gateway <Gateway名稱> reason force-logout' 
+    },
+    { 
+        title: '查看 GP Gateway 統計', 
+        category: 'VPN', 
+        desc: '查看 GlobalProtect Gateway 的總連線數與授權使用量。', 
+        code: 'show global-protect-gateway statistics' 
+    },
+
+    // --- 第六類：User-ID ---
+    { 
+        title: '查看 User-ID 狀態', 
+        category: 'User-ID', 
+        desc: '檢查與 AD Agent 或 Agentless 的連線狀態。', 
+        code: 'show user user-id-agent state all' 
+    },
+    { 
+        title: '查看 IP 對應使用者 (Mapping)', 
+        category: 'User-ID', 
+        desc: '查詢特定 IP 目前對應到哪個 AD 帳號。', 
+        code: 'show user ip-user-mapping ip <IP_Address>' 
+    },
+    { 
+        title: '查看特定群組成員', 
+        category: 'User-ID', 
+        desc: '查詢防火牆從 AD 撈取到的群組成員名單。', 
+        code: 'show user group name "<Group_Name>"' 
+    },
+    { 
+        title: '清除 User-ID Cache', 
+        category: 'User-ID', 
+        desc: '清除所有的 IP-User 對應快取。', 
+        code: 'clear user-cache all' 
+    },
+    { 
+        title: '測試 User-ID 連線', 
+        category: 'User-ID', 
+        desc: '手動觸發與 AD Server 的連線測試。', 
+        code: 'debug user-id refresh user-id agent <Agent_Name>' 
+    },
+
+    // --- 第七類：高可用性 (HA) ---
+    { 
+        title: '查看 HA 狀態', 
+        category: 'HA', 
+        desc: '查看 HA 角色 (Active/Passive)、同步狀態與 Heartbeat。', 
+        code: 'show high-availability state' 
+    },
+    { 
+        title: '查看 HA 同步詳細資訊', 
+        category: 'HA', 
+        desc: '檢查 Running Config 是否同步。', 
+        code: 'show high-availability state-synchronization' 
+    },
+    { 
+        title: '暫停 HA (強制切換)', 
+        category: 'HA', 
+        desc: '將本機暫停 (Suspend)，強制流量切換到另一台。', 
+        code: 'request high-availability state suspend' 
+    },
+    { 
+        title: '恢復 HA 運作', 
+        category: 'HA', 
+        desc: '將暫停的主機恢復為運作狀態 (Make Functional)。', 
+        code: 'request high-availability state functional' 
+    },
+    { 
+        title: '查看 HA Link 介面', 
+        category: 'HA', 
+        desc: '查看 HA1 (Control) 與 HA2 (Data) 介面的狀態。', 
+        code: 'show high-availability interface ha1' 
+    },
+
+    // --- 第八類：日誌與進階除錯 (Log & Debug) ---
+    { 
+        title: '即時查看系統日誌 (Tail)', 
+        category: 'Monitoring', 
+        desc: '類似 Linux tail -f，即時監看 System Log。', 
+        code: 'tail follow yes mp-log system.log' 
+    },
+    { 
+        title: '即時監看 DP 日誌', 
+        category: 'Monitoring', 
+        desc: '即時監看 Data Plane 的錯誤訊息。', 
+        code: 'tail follow yes mp-log dp-monitor.log' 
+    },
+    { 
+        title: '管理介面抓包 (Tcpdump)', 
+        category: 'Troubleshooting', 
+        desc: '在 Management Interface 上抓包 (非 Traffic Port)。', 
+        code: 'tcpdump filter "host 8.8.8.8"' 
+    },
+    { 
+        title: 'Dataplane 封包除錯 (設定)', 
+        category: 'Troubleshooting', 
+        desc: '設定 Packet Filter，準備進行 Flow Basic 追蹤。', 
+        code: 'debug dataplane packet-diag set filter match source <Src_IP> destination <Dst_IP>' 
+    },
+    { 
+        title: 'Dataplane 封包除錯 (啟用)', 
+        category: 'Troubleshooting', 
+        desc: '啟用並開始記錄封包流向 (請務必先設定 Filter)。', 
+        code: 'debug dataplane packet-diag set filter on\ndebug dataplane packet-diag set log feature flow basic\ndebug dataplane packet-diag set log on' 
+    },
+    { 
+        title: '查看除錯結果 (Flow Basic)', 
+        category: 'Troubleshooting', 
+        desc: '查看封包被處理的詳細過程 (Policy, NAT, Drop 原因)。', 
+        code: 'show log system direction equal backward' 
+    },
+    { 
+        title: '關閉所有除錯', 
+        category: 'Troubleshooting', 
+        desc: '除錯完畢後，務必關閉以避免影響效能。', 
+        code: 'debug dataplane packet-diag set log off\ndebug dataplane packet-diag set filter off' 
+    },
+    { 
+        title: '清除 URL Filtering Cache', 
+        category: 'Maintenance', 
+        desc: '當 URL 分類錯誤時，清除快取。', 
+        code: 'clear url-cache all' 
+    },
+    { 
+        title: '查看 URL 分類狀態', 
+        category: 'Troubleshooting', 
+        desc: '測試特定網址的分類結果。', 
+        code: 'test url <網址>' 
+    }
+
+
+                    ],
+
+                    // ================= FORTINET =================
+                    forti: [
+                        { title: 'Debug Flow (除錯神器)', category: 'Troubleshooting', desc: 'Fortinet 必備：追蹤封包流向。', code: 'diagnose debug reset\ndiagnose debug flow filter saddr 1.1.1.1\ndiagnose debug flow trace start 10\ndiagnose debug enable' },
+                        { title: 'CLI 修改介面 IP', category: 'Basic', desc: '設定 WAN/LAN IP。', code: 'config system interface\n edit "wan1"\n  set mode static\n  set ip 192.168.100.1 255.255.255.0\n  set allowaccess ping https ssh\n next\nend' },
+                        { title: '查看系統負載', category: 'Monitoring', desc: '類似 Linux top 指令。', code: 'get system performance status\ndiagnose sys top 1' },{ 
+    title: 'VXLAN 設定 (L2 Bridge 模式)', 
+    category: 'Switching', 
+    desc: '建立 VXLAN 通道並透過軟體交換器 (Software Switch) 與內網 Port 橋接，實現跨地區同網段延伸。', 
+    code: '# 1. 建立 VXLAN 介面 (指向對端 IP)\nconfig system vxlan\n edit "vxlan_to_hq"\n  set interface "wan1"\n  set vni 100\n  set remote-ip 2.2.2.2\n next\nend\n\n# 2. 建立軟體交換器 (將 LAN Port 與 VXLAN 綁定)\nconfig system switch-interface\n edit "softsw_vxlan"\n  set type switch\n  set members "internal" "vxlan_to_hq"\n next\nend\n\n# 3. 設定防火牆策略 (允許同介面進出)\nconfig firewall policy\n edit 1\n  set name "Allow_VXLAN_L2"\n  set srcintf "softsw_vxlan"\n  set dstintf "softsw_vxlan"\n  set action accept\n  set srcaddr "all"\n  set dstaddr "all"\n  set schedule "always"\n  set service "ALL"\n next\nend' 
+},
+{ 
+    title: 'VXLAN 設定 (L3 Routing 模式)', 
+    category: 'Routing', 
+    desc: '將 VXLAN 當作獨立的 L3 介面使用，並設定 IP 位址。', 
+    code: '# 1. 建立 VXLAN 介面\nconfig system vxlan\n edit "vxlan_l3_tunnel"\n  set interface "wan1"\n  set vni 200\n  set remote-ip 3.3.3.3\n next\nend\n\n# 2. 設定介面 IP (就像設定一般 Port)\nconfig system interface\n edit "vxlan_l3_tunnel"\n  set mode static\n  set ip 192.168.200.1 255.255.255.255\n  set remote-ip 192.168.200.2 255.255.255.0\n  set allowaccess ping\n next\nend\n\n# 3. 設定靜態路由\nconfig router static\n edit 1\n  set dst 10.20.0.0 255.255.255.0\n  set device "vxlan_l3_tunnel"\n next\nend' 
+},// === 請將以下內容追加到 database.forti 陣列中 ===
+
+{ 
+    title: '開啟策略全流量紀錄 (Log All Traffic)', 
+    category: 'Security', 
+    desc: '預設 Policy 只會紀錄 UTM 事件，此設定強制紀錄所有通過的 Session (包含 Accept)，除錯必開。', 
+    code: 'config firewall policy\n edit <ID>\n  set logtraffic all\n  set logtraffic-start enable  # 選用: 連線建立時也紀錄(預設是結束才記)\n next\nend' 
+},
+{ 
+    title: '內建抓包工具 (Packet Sniffer)', 
+    category: 'Troubleshooting', 
+    desc: '不需 Wireshark，直接在 CLI 抓取封包內容。參數 4 代表顯示詳細 Header，0 代表持續抓取。', 
+    code: '# 語法: diag sniffer packet <介面> "<過濾條件>" <詳細度> <筆數> <時間格式>\n\n# 範例: 抓取與 8.8.8.8 相關的封包\ndiagnose sniffer packet any "host 8.8.8.8" 4 0 a\n\n# 範例: 抓取 port 80 且不含特定 IP\ndiagnose sniffer packet wan1 "port 80 and not host 192.168.1.1" 4 20 a' 
+},
+{ 
+    title: 'IPsec VPN 詳細除錯 (IKE Debug)', 
+    category: 'VPN', 
+    desc: '當 VPN 建立失敗 (Phase 1/Phase 2 Error) 時，查看詳細協商過程。', 
+    code: 'diagnose vpn ike log-filter dst-addr4 1.2.3.4   # 先過濾對端 IP，避免 Log 太多\ndiagnose debug application ike -1       # -1 代表顯示最詳細資訊\ndiagnose debug enable' 
+},
+{ 
+    title: '查詢連線表與清除 Session', 
+    category: 'Monitoring', 
+    desc: '查看目前的連線狀態 (Session Table)，或強制踢除卡住的連線。', 
+    code: '# 1. 設定過濾條件 (一定要設，不然會當機)\ndiagnose sys session filter dst 8.8.8.8\n\n# 2. 查看連線\ndiagnose sys session list\n\n# 3. 清除剛才過濾出的連線\ndiagnose sys session clear' 
+},
+{ 
+    title: '查看完整路由表 (Routing Table)', 
+    category: 'Network', 
+    desc: 'FortiGate 有分「資料庫路由」與「實際生效路由 (FIB)」，這是看實際生效的。', 
+    code: 'get router info routing-table all\n\n# 只看靜態路由\nget router info routing-table static\n# 只看 BGP\nget router info routing-table bgp' 
+},
+{ 
+    title: 'HA 狀態檢查與強制切換', 
+    category: 'System', 
+    desc: '檢查 High Availability 同步狀態，或強制重新選舉 Master。', 
+    code: '# 查看狀態\nget system ha status\n\n# 強制重新計算 Checksum (當同步失敗時)\ndiagnose sys ha checksum show\n\n# 強制切換 Master (重置 Uptime)\ndiagnose sys ha reset-uptime' 
+},
+{ 
+    title: '檢查光纖模組與網卡數據 (NIC Info)', 
+    category: 'Hardware', 
+    desc: '查看介面的錯誤計數 (Errors/Drops) 與光纖收發光強度 (SFP DDM)。', 
+    code: '# 查看網卡底層計數 (CRC Error 看這)\ndiagnose hardware deviceinfo nic <interface_name>\n\n# 查詢光衰值 (SFP)\nget system interface transceiver' 
+},
+{ 
+    title: '搜尋設定檔內容 (Grep)', 
+    category: 'Basic', 
+    desc: '不用 show run 慢慢翻，直接搜尋關鍵字 (如 IP 或 物件名稱)。', 
+    code: 'show | grep "192.168.1.1"\nshow firewall policy | grep -f "HR_Dept"  # -f 代表顯示上下文' 
+},
+{ 
+    title: '查看當機/重啟紀錄 (Crash Log)', 
+    category: 'Troubleshooting', 
+    desc: '設備如果異常重開機，檢查是否為軟體 Bug 或記憶體不足造成 (Conserve Mode)。', 
+    code: 'diagnose debug crashlog read' 
+},
+{ 
+    title: '查看系統基本資訊', 
+    category: 'System', 
+    desc: '顯示型號、序號、Firmware 版本、授權狀態、系統時間等。', 
+    code: 'get system status' 
+},
+{ 
+    title: '強制踢除管理員', 
+    category: 'System', 
+    desc: '當有人佔用管理登入時，強制中斷其連線。Index 可透過 get system admin status 查詢。', 
+    code: 'execute disconnect-admin-session <index>' 
+},
+{ 
+    title: '查看硬體網卡狀態', 
+    category: 'System', 
+    desc: '檢查實體介面的 Link 狀態、速度、Duplex 以及是否有 CRC 錯誤。', 
+    code: 'diagnose hardware deviceinfo nic <port_name>' 
+},
+{ 
+    title: '列出歷史指令紀錄', 
+    category: 'System', 
+    desc: '查看在此設備上執行過的所有 CLI 指令紀錄。', 
+    code: 'execute log display' 
+},
+{ 
+    title: '查看 ARP 表', 
+    category: 'Network', 
+    desc: '顯示目前的 ARP 對應表 (MAC Address 與 IP 的對應)。', 
+    code: 'get system arp' 
+},
+
+// --- 第二類：網路與路由 (Network & Routing) ---
+{ 
+    title: '查詢特定 IP 路由走向', 
+    category: 'Network', 
+    desc: '非常實用！查詢防火牆會將該 IP 送往哪個介面與 Gateway，確認路由是否正確。', 
+    code: 'get router info routing-table details <目標IP>' 
+},
+{ 
+    title: '查看完整路由表', 
+    category: 'Network', 
+    desc: '列出目前生效的所有路由 (包含 Static, OSPF, BGP, Connected)。', 
+    code: 'get router info routing-table all' 
+},
+{ 
+    title: '帶來源 IP 進行 Ping 測試', 
+    category: 'Network', 
+    desc: '指定從哪個介面 IP 發出 Ping，測試 VPN 通道或特定網段連通性。', 
+    code: 'execute ping-options source <介面IP>\nexecute ping <目標IP>' 
+},
+{ 
+    title: '清除 DNS 快取', 
+    category: 'Network', 
+    desc: '當 FQDN Object 解析錯誤時，強制清除防火牆內的 DNS Cache。', 
+    code: 'diagnose test application dnsproxy 1' 
+},
+{ 
+    title: '重啟介面 (不重開機)', 
+    category: 'Network', 
+    desc: '透過軟體指令將介面 Down 再 Up，用於重新觸發 DHCP 或 PPPoE 撥號。', 
+    code: 'config system interface\n edit "wan1"\n  set status down\n  set status up\n end' 
+},
+
+// --- 第三類：連線管理 (Session Handling) ---
+{ 
+    title: '列出所有 Session (慎用)', 
+    category: 'Troubleshooting', 
+    desc: '列出目前防火牆上所有的連線表。警告：高流量設備執行此指令可能會導致 console 卡住。', 
+    code: 'diagnose sys session list' 
+},
+{ 
+    title: '設定 Session 過濾器', 
+    category: 'Troubleshooting', 
+    desc: '在查看或清除 Session 前，務必先設定過濾條件 (例如只看某個來源 IP)。', 
+    code: 'diagnose sys session filter src 192.168.1.100\ndiagnose sys session list' 
+},
+{ 
+    title: '清除特定條件 Session', 
+    category: 'Troubleshooting', 
+    desc: '配合 filter 使用，強制切斷卡住的連線。執行前請確認 filter 是否設定正確。', 
+    code: '# 1. 設定過濾條件\ndiagnose sys session filter dst 8.8.8.8\n\n# 2. 清除符合條件的連線\ndiagnose sys session clear' 
+},
+{ 
+    title: '查看 Session 統計', 
+    category: 'Monitoring', 
+    desc: '查看目前的 Session 總數、衝突數與 Ephemeral Session 狀況。', 
+    code: 'diagnose sys session stat' 
+},
+
+// --- 第四類：進階除錯 (Debug Flow & Sniffer) ---
+{ 
+    title: 'Debug Flow (標準 SOP)', 
+    category: 'Troubleshooting', 
+    desc: '追蹤封包為何被擋掉的標準流程：重置 -> 過濾 -> 開啟 Trace -> 啟用。', 
+    code: 'diagnose debug reset\ndiagnose debug flow filter saddr <來源IP> daddr <目的IP>\ndiagnose debug flow trace start 20\ndiagnose debug enable' 
+},
+{ 
+    title: 'Packet Sniffer (查看封包內容)', 
+    category: 'Troubleshooting', 
+    desc: '詳細等級設為 6，可顯示 ASCII 與 Hex 內容，用於檢查 Payload (如 HTTP Header)。', 
+    code: 'diagnose sniffer packet any "host 1.1.1.1" 6 10 a' 
+},
+{ 
+    title: '診斷 VPN IKE 協商 (Phase 1)', 
+    category: 'VPN', 
+    desc: 'VPN 連不上時使用。查看 IKE Phase 1 的 Proposal 或 Pre-shared Key 是否錯誤。', 
+    code: 'diagnose debug application ike -1\ndiagnose debug enable' 
+},
+
+// --- 第五類：VPN 相關 (IPsec & SSL) ---
+{ 
+    title: '查看 IPsec Phase 1 狀態', 
+    category: 'VPN', 
+    desc: '列出所有 IPsec Gateway 的連線狀態。', 
+    code: 'diagnose vpn ike gateway list' 
+},
+{ 
+    title: '查看 IPsec Phase 2 (Tunnel) 狀態', 
+    category: 'VPN', 
+    desc: '查看具體的 Tunnel 狀態 (Selector)。', 
+    code: 'diagnose vpn tunnel list' 
+},
+{ 
+    title: '重啟特定 IPsec VPN', 
+    category: 'VPN', 
+    desc: '強制重置某個 VPN 通道 (Flush)，讓它重新協商。', 
+    code: 'diagnose vpn ike gateway clear name <VPN介面名稱>' 
+},
+{ 
+    title: '查看 SSL VPN 線上使用者', 
+    category: 'VPN', 
+    desc: '列出目前透過 SSL VPN 連線的使用者資訊與來源 IP。', 
+    code: 'execute vpn sslvpn list' 
+},
+{ 
+    title: '踢除 SSL VPN 使用者', 
+    category: 'VPN', 
+    desc: '強制中斷特定 SSL VPN 使用者的連線 (Index 從 list 指令取得)。', 
+    code: 'execute vpn sslvpn del <index>' 
+},
+
+// --- 第六類：高可用性 (HA) ---
+{ 
+    title: '查看 HA 狀態', 
+    category: 'HA', 
+    desc: '顯示 HA 叢集狀態、Master/Slave 角色以及同步狀況。', 
+    code: 'get system ha status' 
+},
+{ 
+    title: '檢查 HA 設定同步 (Checksum)', 
+    category: 'HA', 
+    desc: '比較所有設備的 Checksum。若 all: 以及 root: 的數值相同，代表設定完全同步。', 
+    code: 'diagnose sys ha checksum cluster' 
+},
+{ 
+    title: '強制 HA 切換 (Failover)', 
+    category: 'HA', 
+    desc: '重置目前主機 (Master) 的運作時間，使其優先權降低，強制切換到備機。', 
+    code: 'diagnose sys ha reset-uptime' 
+},
+{ 
+    title: '查看 HA 切換歷史', 
+    category: 'HA', 
+    desc: '查看過去發生過 HA 切換的時間點與原因。', 
+    code: 'diagnose sys ha history' 
+},
+
+// --- 第七類：安全性與 UTM (Security) ---
+{ 
+    title: '測試 Web Filter 類別', 
+    category: 'Security', 
+    desc: '測試特定網址在 FortiGate 中被歸類為什麼類別 (Category)。', 
+    code: 'diagnose test application urlfilter 1 <URL>' 
+},
+{ 
+    title: 'IPS 引擎狀態與重啟', 
+    category: 'Security', 
+    desc: '如果 IPS 引擎卡住導致流量異常，可使用此指令測試或重啟 IPS process。', 
+    code: 'diagnose test application ipsmonitor 1' 
+},
+{ 
+    title: 'LDAP 伺服器連線測試', 
+    category: 'Security', 
+    desc: '測試是否能成功連線到 AD/LDAP 伺服器並驗證帳密。', 
+    code: 'diagnose test authserver ldap <Server設定名> <帳號> <密碼>' 
+},
+
+// --- 第八類：維護與備份 (Maintenance) ---
+{ 
+    title: '備份設定檔 (CLI)', 
+    category: 'Maintenance', 
+    desc: '透過 TFTP 將設定檔備份出來。', 
+    code: 'execute backup config tftp <檔名.conf> <TFTP_Server_IP>' 
+},
+{ 
+    title: '還原設定檔', 
+    category: 'Maintenance', 
+    desc: '從 TFTP 還原設定檔 (系統會自動重開機)。', 
+    code: 'execute restore config tftp <檔名.conf> <TFTP_Server_IP>' 
+},
+{ 
+    title: '恢復原廠設定 (Factory Reset)', 
+    category: 'Maintenance', 
+    desc: '清除所有設定並恢復出廠預設值 (IP 變回 192.168.1.99)。', 
+    code: 'execute factoryreset' 
+},
+{ 
+    title: '修改管理 Port', 
+    category: 'Maintenance', 
+    desc: '修改預設的 80/443 管理 Port，避免與 Virtual IP (Port Forwarding) 衝突。', 
+    code: 'config system global\n set admin-sport 8443\n set admin-port 8080\n end' 
+}
+                    ],
+                // ================= HP =================
+                    hp: [
+  {
+    "title": "顯示軟體版本與型號",
+    "category": "System",
+    "desc": "查看交換機的軟體版本、型號、序列號等基本資訊。",
+    "code": "show version"
+  },
+  {
+    "title": "顯示運行配置",
+    "category": "System",
+    "desc": "顯示交換機當前生效的配置，未保存則重啟後會丟失。",
+    "code": "show running-config"
+  },
+  {
+    "title": "顯示啟動配置",
+    "category": "System",
+    "desc": "顯示交換機重啟後將加載的配置。",
+    "code": "show startup-config"
+  },
+  {
+    "title": "進入全局配置模式",
+    "category": "Configuration",
+    "desc": "進入全局配置模式，才能修改交換機的設定。",
+    "code": "config"
+  },
+  {
+    "title": "保存配置",
+    "category": "Configuration",
+    "desc": "將當前運行配置保存到啟動配置，確保重啟後配置不丟失。",
+    "code": "write memory"
+  },
+  {
+    "title": "重新啟動交換機",
+    "category": "System",
+    "desc": "重新啟動交換機。執行前請確認已保存配置。",
+    "code": "reload"
+  },
+  {
+    "title": "設置主機名",
+    "category": "System",
+    "desc": "為交換機設置一個易於識別的主機名。",
+    "code": "hostname <name>"
+  },
+  {
+    "title": "設置默認網關",
+    "category": "Network",
+    "desc": "配置交換機的默認網關，使其可以訪問其他網絡。",
+    "code": "ip default-gateway <ip_address>"
+  },
+  {
+    "title": "設置時區",
+    "category": "System",
+    "desc": "配置交換機的時區。",
+    "code": "clock timezone <timezone_string>"
+  },
+  {
+    "title": "配置夏令時",
+    "category": "System",
+    "desc": "配置夏令時規則，確保時間自動調整。",
+    "code": "clock summer-time <rule_name>"
+  },
+  {
+    "title": "顯示系統時間",
+    "category": "System",
+    "desc": "查看交換機當前的系統時間。",
+    "code": "show clock"
+  },
+  {
+    "title": "指定主 Flash 啟動",
+    "category": "System",
+    "desc": "設定交換機從主 Flash 存儲的固件啟動。",
+    "code": "boot system flash primary"
+  },
+  {
+    "title": "指定備用 Flash 啟動",
+    "category": "System",
+    "desc": "設定交換機從備用 Flash 存儲的固件啟動。",
+    "code": "boot system flash secondary"
+  },
+  {
+    "title": "設置終端顯示長度",
+    "category": "System",
+    "desc": "設置終端顯示長度為無限，避免輸出時自動分頁。",
+    "code": "terminal length 0"
+  },
+  {
+    "title": "設置終端顯示寬度",
+    "category": "System",
+    "desc": "設置終端顯示的字符寬度。",
+    "code": "terminal width 80"
+  },
+  {
+    "title": "顯示模組信息",
+    "category": "Hardware",
+    "desc": "查看交換機的模組（如插卡）狀態和信息。",
+    "code": "show module"
+  },
+  {
+    "title": "設置登錄歡迎信息",
+    "category": "System",
+    "desc": "設置用戶登錄交換機時顯示的歡迎訊息 (Message of the Day)。",
+    "code": "banner motd #<message>#"
+  },
+  {
+    "title": "進入接口配置模式",
+    "category": "Interface",
+    "desc": "進入指定物理接口或多個接口的配置模式。",
+    "code": "interface <port_list>"
+  },
+  {
+    "title": "退出當前模式",
+    "category": "Configuration",
+    "desc": "從當前配置模式退回到上一級模式。",
+    "code": "exit"
+  },
+  {
+    "title": "進入 VLAN 配置模式",
+    "category": "VLAN",
+    "desc": "創建或進入指定 VLAN 的配置模式。",
+    "code": "vlan <vlan_id>"
+  },
+  {
+    "title": "啟用接口",
+    "category": "Interface",
+    "desc": "啟用已被禁用的接口。",
+    "code": "no shutdown"
+  },
+  {
+    "title": "禁用接口",
+    "category": "Interface",
+    "desc": "禁用指定接口。",
+    "code": "shutdown"
+  },
+  {
+    "title": "設置接口速度",
+    "category": "Interface",
+    "desc": "配置接口的工作速度，可設為自動或固定值。",
+    "code": "speed <auto|10|100|1000|10000>"
+  },
+  {
+    "title": "設置接口雙工模式",
+    "category": "Interface",
+    "desc": "配置接口的雙工模式，可設為自動、半雙工或全雙工。",
+    "code": "duplex <auto|half|full>"
+  },
+  {
+    "title": "添加接口描述",
+    "category": "Interface",
+    "desc": "為接口添加描述性文字，便於識別其用途。",
+    "code": "description \"<text>\""
+  },
+  {
+    "title": "設置接口 STP 優先級",
+    "category": "STP",
+    "desc": "配置特定接口在生成樹協議中的優先級。",
+    "code": "spanning-tree port-priority <priority_value>"
+  },
+  {
+    "title": "啟用接口流量控制",
+    "category": "Interface",
+    "desc": "啟用接口的流量控制功能，防止數據包丟失。",
+    "code": "flow-control"
+  },
+  {
+    "title": "禁用接口流量控制",
+    "category": "Interface",
+    "desc": "禁用接口的流量控制功能。",
+    "code": "no flow-control"
+  },
+  {
+    "title": "啟用巨型幀",
+    "category": "Interface",
+    "desc": "啟用接口的巨型幀（Jumbo Frame）支持，以提高吞吐量。",
+    "code": "jumbo-frame"
+  },
+  {
+    "title": "啟用 PoE",
+    "category": "Interface",
+    "desc": "在支持的接口上啟用以太網供電 (PoE) 功能。",
+    "code": "power-over-ethernet"
+  },
+  {
+    "title": "設置 PoE 優先級",
+    "category": "Interface",
+    "desc": "配置 PoE 接口的供電優先級，用於管理電源分配。",
+    "code": "poe priority <critical|high|low>"
+  },
+  {
+    "title": "顯示所有接口狀態",
+    "category": "Interface",
+    "desc": "查看所有接口的詳細狀態和統計信息。",
+    "code": "show interfaces"
+  },
+  {
+    "title": "顯示指定接口狀態",
+    "category": "Interface",
+    "desc": "查看單個指定接口的詳細狀態和統計信息。",
+    "code": "show interface <port_id>"
+  },
+  {
+    "title": "顯示接口簡要狀態",
+    "category": "Interface",
+    "desc": "以簡潔的列表形式顯示所有接口的運行狀態。",
+    "code": "show interface brief"
+  },
+  {
+    "title": "顯示接口 UP/DOWN 狀態",
+    "category": "Interface",
+    "desc": "快速查看所有接口的連接狀態（Up/Down）。",
+    "code": "show interface status"
+  },
+  {
+    "title": "清除接口統計",
+    "category": "Interface",
+    "desc": "清除指定接口的發送和接收數據包統計。",
+    "code": "clear statistics <port_list>"
+  },
+  {
+    "title": "為 VLAN 命名",
+    "category": "VLAN",
+    "desc": "為指定的 VLAN 設置一個名稱，便於管理和識別。",
+    "code": "name \"<vlan_name>\""
+  },
+  {
+    "title": "配置 VLAN 接口 IP",
+    "category": "VLAN",
+    "desc": "為 VLAN 接口（SVI）配置 IP 地址和子網掩碼，實現三層通信。",
+    "code": "ip address <ip_address> <mask>"
+  },
+  {
+    "title": "配置 DHCP Relay",
+    "category": "VLAN",
+    "desc": "配置 DHCP 幫助地址，將 DHCP 請求轉發給指定的 DHCP 服務器。",
+    "code": "ip helper-address <dhcp_server_ip>"
+  },
+  {
+    "title": "設置 Untagged 端口",
+    "category": "VLAN",
+    "desc": "將端口設置為指定 VLAN 的非標記（Access）成員，通常用於連接終端設備。",
+    "code": "untagged <port_list>"
+  },
+  {
+    "title": "設置 Tagged 端口",
+    "category": "VLAN",
+    "desc": "將端口設置為指定 VLAN 的標記（Trunk）成員，通常用於連接其他交換機。",
+    "code": "tagged <port_list>"
+  },
+  {
+    "title": "刪除 VLAN",
+    "category": "VLAN",
+    "desc": "刪除指定 ID 的 VLAN。",
+    "code": "no vlan <vlan_id>"
+  },
+  {
+    "title": "顯示所有 VLAN 配置",
+    "category": "VLAN",
+    "desc": "查看所有 VLAN 的詳細配置，包括名稱、成員端口等。",
+    "code": "show vlan"
+  },
+  {
+    "title": "顯示指定 VLAN 配置",
+    "category": "VLAN",
+    "desc": "查看單個指定 VLAN 的詳細配置。",
+    "code": "show vlan <vlan_id>"
+  },
+  {
+    "title": "顯示端口 VLAN 成員",
+    "category": "VLAN",
+    "desc": "查看指定端口屬於哪些 VLAN 以及其標記狀態。",
+    "code": "show vlan port <port_id>"
+  },
+  {
+    "title": "創建 LACP 鏈路聚合",
+    "category": "Link Aggregation",
+    "desc": "將多個端口組合成一個動態鏈路聚合組 (LACP)。",
+    "code": "trunk <port_list> trk<id> lacp"
+  },
+  {
+    "title": "創建靜態鏈路聚合",
+    "category": "Link Aggregation",
+    "desc": "將多個端口組合成一個靜態鏈路聚合組。",
+    "code": "trunk <port_list> trk<id> static"
+  },
+  {
+    "title": "顯示 LACP 狀態",
+    "category": "Link Aggregation",
+    "desc": "查看 LACP（Link Aggregation Control Protocol）的運行狀態和信息。",
+    "code": "show lacp"
+  },
+  {
+    "title": "顯示鏈路聚合狀態",
+    "category": "Link Aggregation",
+    "desc": "查看所有鏈路聚合組 (Trunk) 的配置和運行狀態。",
+    "code": "show trunk"
+  },
+  {
+    "title": "啟用全局 STP",
+    "category": "STP",
+    "desc": "全局啟用生成樹協議 (Spanning Tree Protocol)。",
+    "code": "spanning-tree"
+  },
+  {
+    "title": "設置 STP 模式",
+    "category": "STP",
+    "desc": "配置生成樹協議的模式，如 RSTP (Rapid STP) 或 MSTP (Multiple STP)。",
+    "code": "spanning-tree mode <rstp|mstp>"
+  },
+  {
+    "title": "設置交換機 STP 優先級",
+    "category": "STP",
+    "desc": "配置交換機在生成樹協議中的根橋優先級。",
+    "code": "spanning-tree priority <priority_value>"
+  },
+  {
+    "title": "強制 STP 兼容版本",
+    "category": "STP",
+    "desc": "強制生成樹協議使用指定的兼容版本。",
+    "code": "spanning-tree force-version <version>"
+  },
+  {
+    "title": "啟用 BPDU Guard",
+    "category": "STP",
+    "desc": "在接口啟用 BPDU Guard，防止非法設備影響 STP 拓撲。",
+    "code": "spanning-tree bpdu-guard"
+  },
+  {
+    "title": "啟用 PortFast",
+    "category": "STP",
+    "desc": "在連接終端設備的接口上啟用 PortFast，加速端口進入轉發狀態。",
+    "code": "spanning-tree port-fast"
+  },
+  {
+    "title": "顯示 STP 總體狀態",
+    "category": "STP",
+    "desc": "查看生成樹協議的整體運行狀態。",
+    "code": "show spanning-tree"
+  },
+  {
+    "title": "顯示 STP 詳細狀態",
+    "category": "STP",
+    "desc": "查看生成樹協議的詳細信息，包括根橋、端口角色等。",
+    "code": "show spanning-tree detail"
+  },
+  {
+    "title": "設置管理員密碼",
+    "category": "Security",
+    "desc": "配置管理員用戶名和密碼，用於控制交換機的完全訪問權限。",
+    "code": "password manager user-name <username> password <password>"
+  },
+  {
+    "title": "設置操作員密碼",
+    "category": "Security",
+    "desc": "配置操作員用戶名和密碼，用於控制交換機的只讀訪問權限。",
+    "code": "password operator user-name <username> password <password>"
+  },
+  {
+    "title": "配置本地認證",
+    "category": "Security",
+    "desc": "設置登錄認證方式為使用交換機本地的用戶數據庫。",
+    "code": "aaa authentication login local"
+  },
+  {
+    "title": "設置控制台密碼",
+    "category": "Security",
+    "desc": "為物理控制台接口設置密碼，限制直接訪問。",
+    "code": "line console password <password>"
+  },
+  {
+    "title": "設置 Telnet 密碼",
+    "category": "Security",
+    "desc": "為 Telnet 服務設置密碼，限制遠程訪問。",
+    "code": "line telnet password <password>"
+  },
+  {
+    "title": "啟用 SSH 服務",
+    "category": "Security",
+    "desc": "啟用安全的遠程登錄協議 SSH (Secure Shell)。",
+    "code": "ip ssh"
+  },
+  {
+    "title": "生成 SSH RSA 密鑰",
+    "category": "Security",
+    "desc": "為 SSH 服務生成 RSA 密鑰，用於加密通信。",
+    "code": "crypto key generate rsa"
+  },
+  {
+    "title": "配置 IP ACL",
+    "category": "Security",
+    "desc": "創建或修改 IP 訪問控制列表 (Access Control List)，用於過濾流量。",
+    "code": "access-list ip <acl_id> <permit|deny> <protocol> <source> <destination> [log]"
+  },
+  {
+    "title": "將 ACL 應用於 VLAN 接口",
+    "category": "Security",
+    "desc": "將配置的 ACL 應用到指定 VLAN 接口的入站或出站流量。",
+    "code": "vlan <vlan_id> ip access-group <acl_id> <in|out>"
+  },
+  {
+    "title": "啟用 IP Source Guard",
+    "category": "Security",
+    "desc": "啟用 IP Source Guard，防止 IP 地址欺騙。",
+    "code": "ip source-guard"
+  },
+  {
+    "title": "靜態綁定 MAC 地址",
+    "category": "Security",
+    "desc": "將特定 MAC 地址靜態綁定到指定端口，防止未經授權的設備接入。",
+    "code": "mac-address-table secure <port_list> address <mac_address>"
+  },
+  {
+    "title": "配置端口安全",
+    "category": "Security",
+    "desc": "在端口上配置安全策略，如限制學習的 MAC 地址數量。",
+    "code": "port-security <port_list> learning <limit> action <trap|disable|static>"
+  },
+  {
+    "title": "顯示端口安全狀態",
+    "category": "Security",
+    "desc": "查看所有端口安全功能的運行狀態。",
+    "code": "show port-security"
+  },
+  {
+    "title": "顯示 MAC 地址表",
+    "category": "Security",
+    "desc": "查看交換機的 MAC 地址表，包括學習到的和靜態配置的 MAC 地址。",
+    "code": "show mac-address-table"
+  },
+  {
+    "title": "啟用全局 IP 路由",
+    "category": "Routing",
+    "desc": "在三層交換機上啟用 IP 路由功能。",
+    "code": "ip routing"
+  },
+  {
+    "title": "啟用 RIP 路由協議",
+    "category": "Routing",
+    "desc": "啟用 RIP (Routing Information Protocol) 路由協議。",
+    "code": "router rip"
+  },
+  {
+    "title": "在 RIP 中宣告網絡",
+    "category": "Routing",
+    "desc": "在 RIP 協議中宣告指定的網絡，使其參與路由交換。",
+    "code": "network <network_address>"
+  },
+  {
+    "title": "啟用 OSPF 路由協議",
+    "category": "Routing",
+    "desc": "啟用 OSPF (Open Shortest Path First) 路由協議。",
+    "code": "router ospf <process_id>"
+  },
+  {
+    "title": "進入 OSPF 區域配置",
+    "category": "Routing",
+    "desc": "進入指定 OSPF 區域的配置模式。",
+    "code": "area <area_id>"
+  },
+  {
+    "title": "顯示路由表",
+    "category": "Routing",
+    "desc": "查看交換機的 IP 路由表，包括靜態路由和動態路由。",
+    "code": "show ip route"
+  },
+  {
+    "title": "配置靜態路由",
+    "category": "Routing",
+    "desc": "配置一條靜態路由，指向特定目的網絡的下一跳 IP 地址。",
+    "code": "ip route <destination_network> <mask> <next_hop_ip>"
+  },
+  {
+    "title": "顯示系統日誌",
+    "category": "Monitoring",
+    "desc": "查看交換機的系統事件日誌。",
+    "code": "show log"
+  },
+  {
+    "title": "顯示 CPU 利用率",
+    "category": "Monitoring",
+    "desc": "查看交換機的 CPU 使用率。",
+    "code": "show cpu"
+  },
+  {
+    "title": "顯示內存利用率",
+    "category": "Monitoring",
+    "desc": "查看交換機的內存使用情況。",
+    "code": "show memory"
+  },
+  {
+    "title": "顯示環境信息",
+    "category": "Monitoring",
+    "desc": "查看交換機的環境狀態，如溫度、風扇速度等。",
+    "code": "show environment"
+  },
+  {
+    "title": "測試網絡連通性",
+    "category": "Diagnostics",
+    "desc": "使用 Ping 命令測試與目標 IP 地址的網絡連通性。",
+    "code": "ping <ip_address>"
+  },
+  {
+    "title": "追蹤路由",
+    "category": "Diagnostics",
+    "desc": "使用 Traceroute 命令追蹤數據包到達目標 IP 地址的路徑。",
+    "code": "traceroute <ip_address>"
+  },
+  {
+    "title": "啟用調試功能",
+    "category": "Diagnostics",
+    "desc": "啟用指定模組的調試功能，用於故障排除 (謹慎使用，可能影響性能)。",
+    "code": "debug <module>"
+  },
+  {
+    "title": "關閉所有調試",
+    "category": "Diagnostics",
+    "desc": "關閉所有當前啟用的調試功能。",
+    "code": "no debug all"
+  },
+  {
+    "title": "顯示日誌配置",
+    "category": "Monitoring",
+    "desc": "查看系統日誌的當前配置。",
+    "code": "show logging"
+  },
+  {
+    "title": "配置 SNMP",
+    "category": "Monitoring",
+    "desc": "配置 SNMP (Simple Network Management Protocol) 社區字符串，用於網絡監控。",
+    "code": "snmp-server community \"<community_string>\" <manager_ip> [read-only|read-write]"
+  },
+  {
+    "title": "配置端口鏡像",
+    "category": "Monitoring",
+    "desc": "配置端口鏡像 (Port Mirroring)，將源端口的流量複製到監控端口。",
+    "code": "mirror port <source_port> monitor <monitor_port>"
+  },
+  {
+    "title": "顯示端口鏡像配置",
+    "category": "Monitoring",
+    "desc": "查看當前端口鏡像的配置。",
+    "code": "show mirror"
+  },
+  {
+    "title": "配置事件日誌級別",
+    "category": "Monitoring",
+    "desc": "設置系統事件日誌記錄的詳細程度。",
+    "code": "event-log <level>"
+  },
+  {
+    "title": "配置 NTP 服務器",
+    "category": "System",
+    "desc": "配置 NTP (Network Time Protocol) 服務器 IP 地址，用於同步系統時間。",
+    "code": "sntp server priority <ip_address>"
+  },
+  {
+    "title": "啟用 SNTP 單播模式",
+    "category": "System",
+    "desc": "啟用 SNTP (Simple Network Time Protocol) 的單播模式。",
+    "code": "sntp unicast"
+  },
+  {
+    "title": "顯示 SNTP 狀態",
+    "category": "System",
+    "desc": "查看 SNTP 服務的運行狀態和同步信息。",
+    "code": "show sntp"
+  },
+  {
+    "title": "從 TFTP 拷貝固件",
+    "category": "File Management",
+    "desc": "從 TFTP 服務器下載固件文件到交換機的 Flash 存儲。",
+    "code": "copy tftp flash <tftp_server_ip> <filename> <primary|secondary>"
+  },
+  {
+    "title": "從 TFTP 拷貝配置",
+    "category": "File Management",
+    "desc": "從 TFTP 服務器下載配置文件到交換機的運行或啟動配置。",
+    "code": "copy tftp config <tftp_server_ip> <filename> <running-config|startup-config>"
+  },
+  {
+    "title": "拷貝配置到 TFTP",
+    "category": "File Management",
+    "desc": "將交換機的運行或啟動配置上傳到 TFTP 服務器。",
+    "code": "copy config tftp <tftp_server_ip> <filename> <running-config|startup-config>"
+  },
+  {
+    "title": "顯示 Flash 信息",
+    "category": "File Management",
+    "desc": "查看交換機 Flash 存儲的詳細信息，包括可用空間和文件。",
+    "code": "show flash"
+  },
+  {
+    "title": "清除啟動配置",
+    "category": "File Management",
+    "desc": "清除交換機的啟動配置文件，將設備恢復到出廠默認設置 (需重啟生效)。",
+    "code": "erase startup-config"
+  }
+],
+					kb: [
+    // ================= 基礎理論 =================
+    { 
+        title: 'OSI 七層模型 (The 7 Layers)', 
+        category: 'Theory', 
+        desc: '網路通訊的標準模型，除錯時由下而上檢查 (Physical -> Application)。', 
+        code: 'Layer 7 - Application  (HTTP, SSH, DNS)  -> 資料 (Data)\nLayer 6 - Presentation (SSL, JPEG)       -> 資料 (Data)\nLayer 5 - Session      (API, Sockets)    -> 資料 (Data)\n--------------------------------------------------------\nLayer 4 - Transport    (TCP, UDP)        -> 區段 (Segment)\nLayer 3 - Network      (IP, ICMP)        -> 封包 (Packet)\nLayer 2 - Data Link    (Ethernet, MAC)   -> 訊框 (Frame)\nLayer 1 - Physical     (Cable, Fiber)    -> 位元 (Bit)' 
+    },
+    { 
+        title: 'TCP 三向交握 (Three-Way Handshake)', 
+        category: 'Theory', 
+        desc: '建立可靠連線的過程 (SYN -> SYN-ACK -> ACK)。', 
+        code: 'Client                  Server\n  |                       |\n  | --- SYN (Seq=x) ----> |\n  |                       | (Listening)\n  | <--- SYN (Seq=y) ---- |\n  |      ACK (Ack=x+1)    |\n  |                       |\n  | --- ACK (Ack=y+1) --> | (Established)\n  |                       |\n  v                       v' 
+    },
+    
+    // ================= 速查表 (Cheatsheet) =================
+    { 
+        title: '常用 TCP/UDP Port 速查', 
+        category: 'Reference', 
+        desc: '維運與設定防火牆必背的通訊埠。', 
+        code: '20/21  : FTP (Data/Control)\n22     : SSH (Secure Shell)\n23     : Telnet (不安全)\n25     : SMTP (寄信)\n53     : DNS (UDP/TCP)\n80     : HTTP\n110    : POP3 (收信)\n123    : NTP (時間校時)\n161    : SNMP (網管監控)\n443    : HTTPS\n1433   : SQL Server\n3306   : MySQL\n3389   : RDP (遠端桌面)' 
+    },
+    { 
+        title: 'CIDR 子網掩碼對照表 (Subnet Mask)', 
+        category: 'Reference', 
+        desc: 'IP 規劃速查，快速計算可用 IP 數量。', 
+        code: '/32  255.255.255.255  (1 IP)\n/30  255.255.255.252  (2 IPs)   -> P2P 連線用\n/29  255.255.255.248  (6 IPs)\n/28  255.255.255.240  (14 IPs)\n/27  255.255.255.224  (30 IPs)\n/26  255.255.255.192  (62 IPs)\n/25  255.255.255.128  (126 IPs)\n/24  255.255.255.0    (254 IPs) -> 最常用\n/23  255.255.254.0    (510 IPs)\n/16  255.255.0.0      (65534 IPs)' 
+    },
+    { 
+        title: 'Private IP 私有網段範圍 (RFC 1918)', 
+        category: 'Reference', 
+        desc: '局域網 (LAN) 可自由使用的 IP 範圍。', 
+        code: 'Class A: 10.0.0.0    - 10.255.255.255  (/8)\nClass B: 172.16.0.0  - 172.31.255.255  (/12)\nClass C: 192.168.0.0 - 192.168.255.255 (/16)' 
+    },
+    
+    // ================= 協定細節 =================
+    { 
+        title: 'Syslog Severity Levels (日誌等級)', 
+        category: 'Protocol', 
+        desc: 'Cisco/Linux Log 等級定義 (0 最嚴重 - 7 最輕微)。', 
+        code: '0 - Emergency     (系統不可用)\n1 - Alert         (需立即處理)\n2 - Critical      (嚴重錯誤)\n3 - Error         (錯誤)\n4 - Warning       (警告)\n5 - Notification  (一般通知)\n6 - Informational (資訊)\n7 - Debugging     (除錯訊息)' 
+    },
+    { 
+        title: 'HTTP 狀態碼 (Status Codes)', 
+        category: 'Protocol', 
+        desc: 'Web 服務除錯必備。', 
+        code: '200 OK            (成功)\n301 Moved         (永久轉址)\n400 Bad Request   (請求錯誤)\n401 Unauthorized  (未授權/密碼錯)\n403 Forbidden     (禁止存取)\n404 Not Found     (找不到頁面)\n500 Server Error  (伺服器內部錯誤)\n502 Bad Gateway   (後端無回應)\n503 Service Unavail (維護中)' 
+    },
+    { 
+        title: 'AD 常用指令 (Windows CMD)', 
+        category: 'Tools', 
+        desc: '排查 Active Directory 帳號問題。', 
+        code: '# 強制更新群組原則 (GPO)\ngpupdate /force\n\n# 查看網域登入伺服器\necho %LOGONSERVER%\n\n# 查詢網域帳號鎖定狀態\nnet user <username> /domain' 
+    }
+         
+  
+  
+   
+ 
+]
+                }
+            }
+        },
+        computed: {
+            currentVendorName() {
+                const names = { 
+                    cisco: 'Cisco IOS (Traditional)', 
+                    nxos: 'Cisco Nexus (NX-OS)', 
+                    palo: 'Palo Alto Networks', 
+                    forti: 'Fortinet',
+                    hp: 'HP',
+                    linux: 'Linux Server',
+                    windows: 'Microsoft Windows',
+					kb: '網路基礎知識庫 (Wiki)' 
+                };
+                return names[this.currentVendor];
+            },
+            vendorColorClass() {
+                const colors = { 
+                    cisco: 'bg-cisco', 
+                    nxos: 'bg-nxos', 
+                    palo: 'bg-palo', 
+                    forti: 'bg-forti',
+                    hp: 'bg-hp',
+                    linux: 'bg-linux',
+                    windows: 'bg-win',
+					kb: 'bg-kb' 
+                };
+                return colors[this.currentVendor] || 'bg-gray-500';
+            },
+            categories() {
+                const docs = this.database[this.currentVendor] || [];
+                return Array.from(new Set(docs.map(d => d.category))).sort();
+            },
+            filteredDocs() {
+                let docs = this.database[this.currentVendor] || [];
+                
+                if (this.currentCategory !== 'all') {
+                    docs = docs.filter(d => d.category === this.currentCategory);
+                }
+
+                if (this.searchQuery) {
+                    const q = this.searchQuery.toLowerCase();
+                    docs = docs.filter(d => 
+                        d.title.toLowerCase().includes(q) || 
+                        d.code.toLowerCase().includes(q) ||
+                        d.desc.toLowerCase().includes(q)
+                    );
+                }
+                return docs;
+            }
+        },
+        methods: {
+            setVendor(vendor) {
+                this.currentVendor = vendor;
+                this.currentCategory = 'all';
+                this.searchQuery = '';
+            },
+            getNavClass(vendor, activeBg) {
+                const base = "w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 group text-sm mb-1 ";
+                if (this.currentVendor === vendor) {
+                    return base + activeBg + " text-white shadow-md";
+                }
+                return base + "text-slate-400 hover:bg-slate-800 hover:text-white";
+            },
+            getIcon(category) {
+                const map = {
+                    'Routing': 'ri-route-line',
+                    'Switching': 'ri-git-merge-line',
+                    'vPC': 'ri-links-line',
+                    'Security': 'ri-shield-keyhole-line',
+                    'Troubleshooting': 'ri-bug-2-line',
+                    'Basic': 'ri-terminal-box-line',
+                    'Management': 'ri-admin-line',
+                    'Network': 'ri-global-line',
+                    'System': 'ri-cpu-line',
+                    'File System': 'ri-folder-lock-line',
+                    'File Ops': 'ri-file-copy-2-line',
+                    'Monitoring': 'ri-pulse-line',
+                    'AD/User': 'ri-user-settings-line'
+                };
+                return map[category] || 'ri-code-s-slash-line';
+            },
+            async copyCode(text) {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    alert('指令已複製！');
+                } catch (err) { console.error(err); }
+            }
+        }
+    }).mount('#app')
+</script>
+
+</body>
+</html>
+    `;
+
+    return new Response(html, {
+      headers: {
+        "content-type": "text/html;charset=UTF-8",
+      },
+    });
   },
 };
